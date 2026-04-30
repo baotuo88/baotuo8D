@@ -1,6 +1,8 @@
 import process from "process";
 
 const baseUrl = String(process.env.TEST_BASE_URL || "http://127.0.0.1:8080/api").replace(/\/+$/, "");
+const metricsUrl = String(process.env.TEST_METRICS_URL || "http://127.0.0.1:8080/metrics");
+const metricsToken = String(process.env.TEST_METRICS_TOKEN || "").trim();
 const email = process.env.TEST_USER_EMAIL || `integration_${Date.now()}@example.com`;
 const password = process.env.TEST_USER_PASSWORD || "IntegrationPassw0rd!";
 const name = process.env.TEST_USER_NAME || "Integration User";
@@ -61,7 +63,9 @@ async function run() {
   const ragLogs = await request("/rag/logs?limit=1", { token });
   assert(ragLogs.ok, `rag logs failed: ${JSON.stringify(ragLogs.data)}`);
 
-  const metricsRes = await fetch(String(process.env.TEST_METRICS_URL || "http://127.0.0.1:8080/metrics"));
+  const metricsRes = await fetch(metricsUrl, {
+    headers: metricsToken ? { Authorization: `Bearer ${metricsToken}` } : {}
+  });
   const metricsText = await metricsRes.text();
   assert(metricsRes.ok, "metrics endpoint failed");
   assert(metricsText.includes("http_requests_total"), "metrics payload missing http_requests_total");

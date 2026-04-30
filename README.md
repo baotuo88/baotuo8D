@@ -267,7 +267,7 @@ SMOKE_BASE_URL=http://127.0.0.1:8080/api npm run smoke
 
 ```bash
 cd backend
-TEST_BASE_URL=http://127.0.0.1:8080/api npm run test:integration
+TEST_BASE_URL=http://127.0.0.1:8080/api TEST_METRICS_TOKEN=your_metrics_token npm run test:integration
 ```
 
 ## 备份与恢复

@@ -39,6 +39,14 @@ docker compose --profile prod --profile monitoring config >/tmp/eightd.compose.r
 echo "[4/7] checking service health..."
 docker compose ps
 
+if docker compose ps --format json >/tmp/eightd.compose.ps.json 2>/dev/null; then
+  if grep -Eq '"State":"(exited|dead)"' /tmp/eightd.compose.ps.json; then
+    echo "found exited/dead container"
+    cat /tmp/eightd.compose.ps.json
+    exit 1
+  fi
+fi
+
 echo "[5/7] checking api health..."
 HEALTH_JSON="$(curl -fsS http://127.0.0.1:8080/api/health)"
 echo "$HEALTH_JSON"
@@ -50,7 +58,7 @@ echo "[7/7] running backend smoke + integration tests..."
 (
   cd backend
   SMOKE_BASE_URL=http://127.0.0.1:8080/api npm run smoke
-  TEST_BASE_URL=http://127.0.0.1:8080/api TEST_METRICS_URL=http://127.0.0.1:8080/metrics npm run test:integration
+  TEST_BASE_URL=http://127.0.0.1:8080/api TEST_METRICS_URL=http://127.0.0.1:8080/metrics TEST_METRICS_TOKEN="${METRICS_TOKEN}" npm run test:integration
 )
 
 echo "preflight passed"
