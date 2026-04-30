@@ -7,6 +7,7 @@ import {
   buildRagEightDPrompt,
   buildStyleSummaryPrompt
 } from "../utils/ragPrompt.js";
+import { recordRagGenerationEvent } from "../utils/metrics.js";
 import { createAiGenerationLog } from "./aiLogService.js";
 import { generateJson, generateText } from "./openaiService.js";
 import { searchRagCases } from "./ragSearchService.js";
@@ -356,6 +357,7 @@ export async function generateEightDFromRag(payload, currentUser) {
     rawReport.d5_corrective_actions = mergeSectionWithHint(rawReport?.d5_corrective_actions, d5Text);
     const report = normalizeGeneratedReport(rawReport, referenceCases);
     const reportText = renderEightDText(report);
+    recordRagGenerationEvent("success");
 
     const generationLog = await createAiGenerationLog({
       user_id: currentUser.id,
@@ -387,6 +389,7 @@ export async function generateEightDFromRag(payload, currentUser) {
       report_text: reportText
     };
   } catch (error) {
+    recordRagGenerationEvent("failed");
     await createAiGenerationLog({
       user_id: currentUser.id,
       scene: "rag_generation",

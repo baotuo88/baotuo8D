@@ -1,4 +1,5 @@
 import { httpError } from "../utils/httpError.js";
+import { createAuditLog } from "./auditLogService.js";
 import { enqueueRagIngestionJob, getRagIngestionJob } from "../queue/ragIngestionQueue.js";
 
 function normalizeJobPayload(payload = {}) {
@@ -32,6 +33,22 @@ function normalizeJobPayload(payload = {}) {
 export async function createRagIngestionJob(payload) {
   const normalized = normalizeJobPayload(payload);
   const job = await enqueueRagIngestionJob(normalized);
+
+  await createAuditLog({
+    actor_id: normalized.current_user.id || null,
+    actor_role: normalized.current_user.role || "",
+    action: "rag_ingestion_job.create",
+    resource_type: "rag_ingestion_job",
+    resource_id: String(job.id),
+    status: "success",
+    detail: {
+      type: normalized.type,
+      files_count: normalized.files.length,
+      file_paths_count: normalized.file_paths.length,
+      folder_options: normalized.folder_options
+    }
+  }).catch(() => {});
+
   return {
     job_id: job.id,
     queue: job.queueName,

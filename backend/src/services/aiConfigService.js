@@ -2,6 +2,7 @@ import { env } from "../config/env.js";
 import { ROLES } from "../constants/roles.js";
 import { query } from "../db/pool.js";
 import { httpError } from "../utils/httpError.js";
+import { createAuditLog } from "./auditLogService.js";
 
 const AI_CONFIG_ID = 1;
 
@@ -228,6 +229,22 @@ export async function updateAiConfig(payload, currentUser) {
   );
 
   const row = await getConfigRow();
+
+  await createAuditLog({
+    actor_id: currentUser.id,
+    actor_role: currentUser.role,
+    action: "ai_config.update",
+    resource_type: "ai_runtime_config",
+    resource_id: String(AI_CONFIG_ID),
+    status: "success",
+    detail: {
+      chat_base_url: input.chat_base_url,
+      chat_model: input.chat_model,
+      embed_base_url: input.embed_base_url,
+      embed_model: input.embed_model
+    }
+  }).catch(() => {});
+
   return toAdminView(row);
 }
 
@@ -315,6 +332,24 @@ export async function upsertAiProviderConfig(payload, currentUser) {
       currentUser.id
     ]
   );
+
+  await createAuditLog({
+    actor_id: currentUser.id,
+    actor_role: currentUser.role,
+    action: "ai_provider.upsert",
+    resource_type: "ai_provider_configs",
+    resource_id: input.provider_name,
+    status: "success",
+    detail: {
+      provider_name: input.provider_name,
+      priority: input.priority,
+      enabled: input.enabled,
+      chat_base_url: input.chat_base_url,
+      chat_model: input.chat_model,
+      embed_base_url: input.embed_base_url,
+      embed_model: input.embed_model
+    }
+  }).catch(() => {});
 
   return listAiProviderConfigs(currentUser);
 }

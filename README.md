@@ -705,6 +705,46 @@ Authorization: Bearer <token>
 - `metrics.satisfaction_rate`：用户满意度（`good / total_rated`）
 - `items`：按时间倒序的评估明细
 
+#### 4.4) RAG 业务指标总览
+
+- `GET /api/rag/metrics`
+- 鉴权：是
+- 权限：`admin` / `user`（`user` 仅统计本人）
+
+查询参数：
+
+- `from`：起始时间（ISO datetime）
+- `to`：结束时间（ISO datetime）
+
+返回包含：
+
+- `generation.total/success/failed`
+- `generation.avg_duration_ms/p95_duration_ms`
+- `evaluation.good/normal/bad/total`
+- `evaluation.satisfaction_rate`
+- `trends`（近 14 天趋势）
+
+#### 4.5) 审计日志（管理员）
+
+- `GET /api/audit/logs`
+- 鉴权：是
+- 权限：`admin`
+
+查询参数：
+
+- `action`
+- `resourceType`（或 `resource_type`）
+- `status`
+- `from` / `to`
+- `limit` / `offset`
+
+当前已纳入审计的关键动作包括：
+
+- `ai_config.update`
+- `ai_provider.upsert`
+- `rag_ingestion_job.create`
+- `rag_evaluation.upsert`
+
 #### 5) 学习写作风格（管理员）
 
 - `POST /api/rag/style-profiles`

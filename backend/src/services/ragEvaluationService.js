@@ -1,6 +1,8 @@
 import { ROLES } from "../constants/roles.js";
 import { query } from "../db/pool.js";
 import { httpError } from "../utils/httpError.js";
+import { recordRagEvaluationEvent } from "../utils/metrics.js";
+import { createAuditLog } from "./auditLogService.js";
 
 const ALLOWED_RATINGS = new Set(["good", "normal", "bad"]);
 
@@ -103,7 +105,140 @@ export async function upsertRagGenerationEvaluation(payload = {}, currentUser) {
     ]
   );
 
+  recordRagEvaluationEvent(rating);
+
+  await createAuditLog({
+    actor_id: currentUser.id,
+    actor_role: currentUser.role,
+    action: "rag_evaluation.upsert",
+    resource_type: "rag_generation_evaluation",
+    resource_id: generationLogId,
+    status: "success",
+    detail: {
+      rating,
+      comment: normalizeText(payload.comment, 200)
+    }
+  }).catch(() => {});
+
   return result.rows[0];
+}
+
+export async function getRagBusinessMetrics(params = {}, currentUser) {
+  assertAuthedUser(currentUser);
+
+  const from = normalizeIsoDate(params.from);
+  const to = normalizeIsoDate(params.to);
+
+  const where = [];
+  const values = [];
+
+  if (currentUser.role !== ROLES.ADMIN) {
+    values.push(currentUser.id);
+    where.push(`user_id = $${values.length}`);
+  }
+
+  if (from) {
+    values.push(from);
+    where.push(`created_at >= $${values.length}::timestamptz`);
+  }
+
+  if (to) {
+    values.push(to);
+    where.push(`created_at <= $${values.length}::timestamptz`);
+  }
+
+  const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+
+  const generationAgg = await query(
+    `
+    SELECT
+      COUNT(*)::int AS total,
+      SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END)::int AS success,
+      SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END)::int AS failed,
+      AVG(duration_ms)::numeric(12,2) AS avg_duration_ms,
+      PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY duration_ms)::numeric(12,2) AS p95_duration_ms
+    FROM ai_generation_logs
+    ${whereSql}
+    `,
+    values
+  );
+
+  const evalWhere = [];
+  const evalValues = [];
+  if (currentUser.role !== ROLES.ADMIN) {
+    evalValues.push(currentUser.id);
+    evalWhere.push(`l.user_id = $${evalValues.length}`);
+  }
+  if (from) {
+    evalValues.push(from);
+    evalWhere.push(`l.created_at >= $${evalValues.length}::timestamptz`);
+  }
+  if (to) {
+    evalValues.push(to);
+    evalWhere.push(`l.created_at <= $${evalValues.length}::timestamptz`);
+  }
+  const evalWhereSql = evalWhere.length > 0 ? `WHERE ${evalWhere.join(" AND ")}` : "";
+
+  const evaluationAgg = await query(
+    `
+    SELECT
+      SUM(CASE WHEN e.rating = 'good' THEN 1 ELSE 0 END)::int AS good,
+      SUM(CASE WHEN e.rating = 'normal' THEN 1 ELSE 0 END)::int AS normal,
+      SUM(CASE WHEN e.rating = 'bad' THEN 1 ELSE 0 END)::int AS bad,
+      COUNT(e.id)::int AS total
+    FROM rag_generation_evaluations e
+    JOIN ai_generation_logs l ON l.id = e.generation_log_id
+    ${evalWhereSql}
+    `,
+    evalValues
+  );
+
+  const trendAgg = await query(
+    `
+    SELECT
+      date_trunc('day', created_at) AS day,
+      COUNT(*)::int AS total,
+      SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END)::int AS success,
+      AVG(duration_ms)::numeric(12,2) AS avg_duration_ms
+    FROM ai_generation_logs
+    ${whereSql}
+    GROUP BY 1
+    ORDER BY 1 DESC
+    LIMIT 14
+    `,
+    values
+  );
+
+  const g = generationAgg.rows[0] ?? {};
+  const e = evaluationAgg.rows[0] ?? {};
+  const totalEval = Number(e.total || 0);
+
+  return {
+    filter: {
+      from: from || null,
+      to: to || null
+    },
+    generation: {
+      total: Number(g.total || 0),
+      success: Number(g.success || 0),
+      failed: Number(g.failed || 0),
+      avg_duration_ms: Number(g.avg_duration_ms || 0),
+      p95_duration_ms: Number(g.p95_duration_ms || 0)
+    },
+    evaluation: {
+      total: totalEval,
+      good: Number(e.good || 0),
+      normal: Number(e.normal || 0),
+      bad: Number(e.bad || 0),
+      satisfaction_rate: totalEval > 0 ? Number((Number(e.good || 0) / totalEval).toFixed(4)) : 0
+    },
+    trends: trendAgg.rows.map((row) => ({
+      day: row.day,
+      total: Number(row.total || 0),
+      success: Number(row.success || 0),
+      avg_duration_ms: Number(row.avg_duration_ms || 0)
+    }))
+  };
 }
 
 export async function getRagEvaluationStats(params = {}, currentUser) {

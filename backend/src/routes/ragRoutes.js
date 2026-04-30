@@ -13,7 +13,9 @@ import {
 import { generateEightDFromRag, generateEightDFromRagAB } from "../services/ragGenerationService.js";
 import { createRagIngestionJob, getRagIngestionJobStatus } from "../services/ragIngestionJobService.js";
 import { queryAiGenerationLogs } from "../services/aiLogService.js";
+import { queryAuditLogs } from "../services/auditLogService.js";
 import {
+  getRagBusinessMetrics,
   getRagEvaluationStats,
   upsertRagGenerationEvaluation
 } from "../services/ragEvaluationService.js";
@@ -250,6 +252,24 @@ router.post("/rag/evaluations", async (req, res, next) => {
 router.get("/rag/evaluations/stats", async (req, res, next) => {
   try {
     const data = await getRagEvaluationStats(req.query ?? {}, req.user);
+    res.json({ data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/rag/metrics", async (req, res, next) => {
+  try {
+    const data = await getRagBusinessMetrics(req.query ?? {}, req.user);
+    res.json({ data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/audit/logs", requireRoles([ROLES.ADMIN]), async (req, res, next) => {
+  try {
+    const data = await queryAuditLogs(req.query ?? {}, req.user);
     res.json({ data });
   } catch (error) {
     next(error);

@@ -9,7 +9,12 @@ const state = {
   byMethod: new Map(),
   durationBuckets: new Map(),
   durationCount: 0,
-  durationSumMs: 0
+  durationSumMs: 0,
+  ragGenerationSuccess: 0,
+  ragGenerationFailed: 0,
+  ragEvaluationGood: 0,
+  ragEvaluationNormal: 0,
+  ragEvaluationBad: 0
 };
 
 for (const bucket of buckets) {
@@ -49,6 +54,30 @@ export function recordRequest({ method, path, statusCode, durationMs }) {
   }
 }
 
+export function recordRagGenerationEvent(status) {
+  if (status === "success") {
+    state.ragGenerationSuccess += 1;
+    return;
+  }
+  if (status === "failed") {
+    state.ragGenerationFailed += 1;
+  }
+}
+
+export function recordRagEvaluationEvent(rating) {
+  if (rating === "good") {
+    state.ragEvaluationGood += 1;
+    return;
+  }
+  if (rating === "normal") {
+    state.ragEvaluationNormal += 1;
+    return;
+  }
+  if (rating === "bad") {
+    state.ragEvaluationBad += 1;
+  }
+}
+
 function linesFromMap(metricName, help, map, labelName) {
   const lines = [`# HELP ${metricName} ${help}`, `# TYPE ${metricName} counter`];
   for (const [key, value] of map.entries()) {
@@ -75,7 +104,22 @@ export function renderPrometheusMetrics() {
     "# TYPE http_request_duration_ms_avg gauge",
     `http_request_duration_ms_avg ${durationAvg.toFixed(3)}`,
     "# HELP http_request_duration_ms_bucket Duration bucket counts in ms",
-    "# TYPE http_request_duration_ms_bucket counter"
+    "# TYPE http_request_duration_ms_bucket counter",
+    "# HELP rag_generation_success_total Total successful RAG generations",
+    "# TYPE rag_generation_success_total counter",
+    `rag_generation_success_total ${state.ragGenerationSuccess}`,
+    "# HELP rag_generation_failed_total Total failed RAG generations",
+    "# TYPE rag_generation_failed_total counter",
+    `rag_generation_failed_total ${state.ragGenerationFailed}`,
+    "# HELP rag_evaluation_good_total Total good evaluations",
+    "# TYPE rag_evaluation_good_total counter",
+    `rag_evaluation_good_total ${state.ragEvaluationGood}`,
+    "# HELP rag_evaluation_normal_total Total normal evaluations",
+    "# TYPE rag_evaluation_normal_total counter",
+    `rag_evaluation_normal_total ${state.ragEvaluationNormal}`,
+    "# HELP rag_evaluation_bad_total Total bad evaluations",
+    "# TYPE rag_evaluation_bad_total counter",
+    `rag_evaluation_bad_total ${state.ragEvaluationBad}`
   ];
 
   for (const bucket of buckets) {
