@@ -1,0 +1,33 @@
+{
+  "name": "8d-ai-report-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "worker": "node src/workers/ragIngestionWorker.js",
+    "smoke": "node scripts/smoke-test.js",
+    "test:integration": "node scripts/integration-test.js",
+    "migrate": "node scripts/migrate.js",
+    "check": "node --check src/server.js && node --check src/app.js && node --check scripts/migrate.js && node --check scripts/smoke-test.js && node --check scripts/integration-test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "chromadb": "^3.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express-rate-limit": "^7.4.1",
+    "express": "^4.19.2",
+    "helmet": "^8.0.0",
+    "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.8.0",
+    "multer": "^2.0.2",
+    "openai": "^4.104.0",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.12.0",
+    "bullmq": "^5.12.9",
+    "word-extractor": "^1.0.4"
+  }
+}

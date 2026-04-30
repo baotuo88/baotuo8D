@@ -1,0 +1,191 @@
+import { useEffect, useState } from "react";
+
+const initialForm = {
+  chat_api_key: "",
+  chat_base_url: "",
+  chat_model: "",
+  embed_api_key: "",
+  embed_base_url: "",
+  embed_model: ""
+};
+
+function toForm(config) {
+  if (!config) {
+    return initialForm;
+  }
+
+  return {
+    chat_api_key: "",
+    chat_base_url: config.chat_base_url || "",
+    chat_model: config.chat_model || "",
+    embed_api_key: "",
+    embed_base_url: config.embed_base_url || "",
+    embed_model: config.embed_model || ""
+  };
+}
+
+function Field({ label, children, hint }) {
+  return (
+    <label className="block space-y-2">
+      <span className="text-sm font-medium text-stone-700">{label}</span>
+      {children}
+      {hint ? <span className="block text-xs text-stone-400">{hint}</span> : null}
+    </label>
+  );
+}
+
+export default function AiConfigPage({ config, loading, onReload, onSave }) {
+  const [form, setForm] = useState(initialForm);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setForm(toForm(config));
+  }, [config]);
+
+  useEffect(() => {
+    if (!config) {
+      onReload().catch(() => {});
+    }
+  }, [config]);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setSubmitting(true);
+    setMessage("");
+
+    try {
+      const saved = await onSave(form);
+      setForm(toForm(saved));
+      setMessage("AI 配置已更新。");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
+        <p className="text-[11px] uppercase tracking-[0.24em] text-stone-400">Admin Console</p>
+        <h2 className="mt-2 font-serif text-3xl tracking-tight text-stone-900">AI 配置页</h2>
+        <p className="mt-2 text-sm leading-6 text-stone-500">
+          这里维护聊天模型和向量模型的运行时配置。已存在的密钥不会回显，留空表示不更新。
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-6 grid gap-4">
+          <Field label="聊天模型 API Key" hint="留空则保留现有值。">
+            <input
+              type="password"
+              value={form.chat_api_key}
+              onChange={(event) => setForm((prev) => ({ ...prev, chat_api_key: event.target.value }))}
+              className="w-full rounded-2xl border border-stone-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-stone-400"
+              placeholder="sk-..."
+            />
+          </Field>
+
+          <Field label="聊天模型 Base URL">
+            <input
+              value={form.chat_base_url}
+              onChange={(event) => setForm((prev) => ({ ...prev, chat_base_url: event.target.value }))}
+              className="w-full rounded-2xl border border-stone-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-stone-400"
+              placeholder="https://api.openai.com/v1"
+            />
+          </Field>
+
+          <Field label="聊天模型 Model">
+            <input
+              value={form.chat_model}
+              onChange={(event) => setForm((prev) => ({ ...prev, chat_model: event.target.value }))}
+              className="w-full rounded-2xl border border-stone-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-stone-400"
+              placeholder="gpt-4o-mini"
+            />
+          </Field>
+
+          <Field label="Embedding API Key" hint="留空则保留现有值。">
+            <input
+              type="password"
+              value={form.embed_api_key}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, embed_api_key: event.target.value }))
+              }
+              className="w-full rounded-2xl border border-stone-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-stone-400"
+              placeholder="sk-..."
+            />
+          </Field>
+
+          <Field label="Embedding Base URL">
+            <input
+              value={form.embed_base_url}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, embed_base_url: event.target.value }))
+              }
+              className="w-full rounded-2xl border border-stone-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-stone-400"
+              placeholder="https://api.openai.com/v1"
+            />
+          </Field>
+
+          <Field label="Embedding Model">
+            <input
+              value={form.embed_model}
+              onChange={(event) => setForm((prev) => ({ ...prev, embed_model: event.target.value }))}
+              className="w-full rounded-2xl border border-stone-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-stone-400"
+              placeholder="text-embedding-3-small"
+            />
+          </Field>
+
+          {message && (
+            <div className="rounded-2xl border border-stone-200 bg-[#f7f6f3] px-4 py-3 text-sm text-stone-600">
+              {message}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              disabled={submitting}
+              type="submit"
+              className="rounded-2xl bg-stone-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-stone-800 disabled:opacity-60"
+            >
+              {submitting ? "保存中..." : "保存配置"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onReload()}
+              className="rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-medium text-stone-600 transition hover:border-stone-300 hover:text-stone-900"
+            >
+              刷新配置
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
+        <p className="text-[11px] uppercase tracking-[0.24em] text-stone-400">Current Snapshot</p>
+        <h3 className="mt-2 font-serif text-2xl tracking-tight text-stone-900">当前配置概览</h3>
+
+        {loading ? (
+          <p className="mt-6 text-sm text-stone-500">正在读取配置...</p>
+        ) : !config ? (
+          <p className="mt-6 text-sm text-stone-500">暂无配置数据。</p>
+        ) : (
+          <div className="mt-6 space-y-3">
+            {[
+              ["聊天模型", config.chat_model],
+              ["聊天 Base URL", config.chat_base_url],
+              ["聊天 Key", config.chat_api_key_masked || "未配置"],
+              ["向量模型", config.embed_model],
+              ["向量 Base URL", config.embed_base_url],
+              ["向量 Key", config.embed_api_key_masked || "未配置"]
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl bg-[#f7f6f3] px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.22em] text-stone-400">{label}</p>
+                <p className="mt-2 break-all text-sm text-stone-700">{value || "-"}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

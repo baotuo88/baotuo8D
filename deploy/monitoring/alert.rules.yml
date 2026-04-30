@@ -1,0 +1,29 @@
+groups:
+  - name: eightd-backend-alerts
+    rules:
+      - alert: EightdBackendHigh5xxRate
+        expr: increase(http_errors_total[5m]) >= 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "eightd backend 5xx rate is high"
+          description: "http_errors_total increased by >=10 over 5m"
+
+      - alert: EightdBackendTrafficDrop
+        expr: increase(http_requests_total[10m]) < 5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "eightd backend traffic dropped"
+          description: "request count in 10m is lower than expected"
+
+      - alert: EightdBackendSlowRequests
+        expr: http_request_duration_ms_avg > 1500
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "eightd backend average latency is high"
+          description: "average request latency > 1500ms over 10m window"

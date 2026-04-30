@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: "Source Han Serif SC", "Noto Serif SC", "Iowan Old Style", "Palatino Linotype",
+    "Book Antiqua", Palatino, serif;
+  background: #f7f6f3;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  @apply text-stone-900 antialiased;
+  background:
+    radial-gradient(circle at top left, rgba(214, 211, 209, 0.28), transparent 24%),
+    linear-gradient(180deg, #faf8f4 0%, #f4f1eb 100%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(120, 113, 108, 0.22);
+  color: #1c1917;
+}
+
+textarea {
+  resize: vertical;
+}
+
+pre {
+  font-family: "SFMono-Regular", "Menlo", "Monaco", "Cascadia Code", "Segoe UI Mono",
+    "Roboto Mono", monospace;
+}
