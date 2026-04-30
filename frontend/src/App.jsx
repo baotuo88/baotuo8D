@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import AppShell from "./components/AppShell";
-import AuthPage from "./components/AuthPage";
 import AiConfigPage from "./components/AiConfigPage";
+import AppShell from "./components/AppShell";
+import AuditLogsPage from "./components/AuditLogsPage";
+import AuthPage from "./components/AuthPage";
 import EightDDetailPage from "./components/EightDDetailPage";
 import EightDListPage from "./components/EightDListPage";
 import GenerateModal from "./components/GenerateModal";
-import { apiRequest, getStoredSession, setStoredSession, clearStoredSession } from "./lib/api";
+import RagMetricsPage from "./components/RagMetricsPage";
+import { apiRequest, clearStoredSession, getStoredSession, setStoredSession } from "./lib/api";
 
 function parseRoute() {
   const hash = window.location.hash.replace(/^#/, "") || "/reports";
@@ -14,6 +16,12 @@ function parseRoute() {
 
   if (path === "/ai-config") {
     return { page: "ai-config" };
+  }
+  if (path === "/rag-metrics") {
+    return { page: "rag-metrics" };
+  }
+  if (path === "/audit-logs") {
+    return { page: "audit-logs" };
   }
 
   const match = path.match(/^\/reports\/([^/]+)$/);
@@ -32,6 +40,34 @@ function isAdmin(user) {
   return user?.role === "admin";
 }
 
+function downloadCsv(fileName, rows) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return;
+  }
+
+  const headers = Object.keys(rows[0]);
+  const csv = [
+    headers.join(","),
+    ...rows.map((row) =>
+      headers
+        .map((key) => {
+          const raw = row[key] ?? "";
+          const escaped = String(raw).replace(/"/g, '""');
+          return `"${escaped}"`;
+        })
+        .join(",")
+    )
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function App() {
   const [route, setRoute] = useState(parseRoute);
   const [session, setSession] = useState(() => getStoredSession());
@@ -45,6 +81,10 @@ export default function App() {
   const [aiConfigLoading, setAiConfigLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [generatorOpen, setGeneratorOpen] = useState(false);
+  const [ragMetrics, setRagMetrics] = useState(null);
+  const [ragMetricsLoading, setRagMetricsLoading] = useState(false);
+  const [auditLogs, setAuditLogs] = useState(null);
+  const [auditLogsLoading, setAuditLogsLoading] = useState(false);
 
   const token = session?.token || "";
   const currentUser = session?.user || null;
@@ -166,6 +206,42 @@ export default function App() {
     }
   }
 
+  async function loadRagMetrics(query = {}) {
+    if (!token) {
+      return;
+    }
+
+    try {
+      setRagMetricsLoading(true);
+      const params = new URLSearchParams(query);
+      const suffix = params.toString() ? `?${params.toString()}` : "";
+      const result = await apiRequest(`/rag/metrics${suffix}`, { token });
+      setRagMetrics(result.data);
+    } catch (error) {
+      setAppError(error.message);
+    } finally {
+      setRagMetricsLoading(false);
+    }
+  }
+
+  async function loadAuditLogs(query = {}) {
+    if (!token || !isAdmin(currentUser)) {
+      return;
+    }
+
+    try {
+      setAuditLogsLoading(true);
+      const params = new URLSearchParams(query);
+      const suffix = params.toString() ? `?${params.toString()}` : "";
+      const result = await apiRequest(`/audit/logs${suffix}`, { token });
+      setAuditLogs(result.data);
+    } catch (error) {
+      setAppError(error.message);
+    } finally {
+      setAuditLogsLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!token) {
       return;
@@ -183,6 +259,16 @@ export default function App() {
 
     if (route.page === "ai-config") {
       loadAiConfig();
+      return;
+    }
+
+    if (route.page === "rag-metrics") {
+      loadRagMetrics();
+      return;
+    }
+
+    if (route.page === "audit-logs") {
+      loadAuditLogs();
     }
   }, [token, route.page, route.reportId]);
 
@@ -224,6 +310,8 @@ export default function App() {
     setReports([]);
     setSelectedReport(null);
     setAiConfig(null);
+    setRagMetrics(null);
+    setAuditLogs(null);
     window.location.hash = "/reports";
   }
 
@@ -312,11 +400,15 @@ export default function App() {
   const navigation = useMemo(
     () => [
       { key: "report-list", label: "8D 列表", href: "/reports" },
+      { key: "rag-metrics", label: "RAG 指标", href: "/rag-metrics" },
       ...(selectedReport
         ? [{ key: "report-detail", label: "当前报告", href: `/reports/${selectedReport.id}` }]
         : []),
       ...(isAdmin(currentUser)
-        ? [{ key: "ai-config", label: "AI 配置", href: "/ai-config" }]
+        ? [
+            { key: "ai-config", label: "AI 配置", href: "/ai-config" },
+            { key: "audit-logs", label: "审计日志", href: "/audit-logs" }
+          ]
         : [])
     ],
     [selectedReport, currentUser]
@@ -384,6 +476,44 @@ export default function App() {
             loading={aiConfigLoading}
             onReload={loadAiConfig}
             onSave={handleSaveAiConfig}
+          />
+        )}
+
+        {route.page === "rag-metrics" && (
+          <RagMetricsPage
+            loading={ragMetricsLoading}
+            data={ragMetrics}
+            onRefresh={() => loadRagMetrics()}
+            onExportCsv={() => {
+              const rows = (ragMetrics?.trends || []).map((item) => ({
+                day: String(item.day).slice(0, 10),
+                total: item.total,
+                success: item.success,
+                avg_duration_ms: item.avg_duration_ms
+              }));
+              downloadCsv("rag-metrics-trends.csv", rows);
+            }}
+          />
+        )}
+
+        {route.page === "audit-logs" && isAdmin(currentUser) && (
+          <AuditLogsPage
+            loading={auditLogsLoading}
+            data={auditLogs}
+            onSearch={(query) => loadAuditLogs(query)}
+            onExportCsv={() => {
+              const rows = (auditLogs?.items || []).map((item) => ({
+                created_at: item.created_at,
+                action: item.action,
+                status: item.status,
+                resource_type: item.resource_type,
+                resource_id: item.resource_id,
+                actor_id: item.actor_id || "",
+                actor_role: item.actor_role || "",
+                ip: item.ip || ""
+              }));
+              downloadCsv("audit-logs.csv", rows);
+            }}
           />
         )}
       </AppShell>
