@@ -1,4 +1,5 @@
 import { httpError } from "../utils/httpError.js";
+import { logger } from "../utils/logger.js";
 import { createAuditLog } from "./auditLogService.js";
 import { enqueueRagIngestionJob, getRagIngestionJob } from "../queue/ragIngestionQueue.js";
 
@@ -47,7 +48,12 @@ export async function createRagIngestionJob(payload) {
       file_paths_count: normalized.file_paths.length,
       folder_options: normalized.folder_options
     }
-  }).catch(() => {});
+  }).catch((error) => {
+    logger.warn("audit_log_write_failed", {
+      action: "rag_ingestion_job.create",
+      error: error?.message || "unknown_error"
+    });
+  });
 
   return {
     job_id: job.id,

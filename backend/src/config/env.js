@@ -15,6 +15,17 @@ function toBool(value, fallback = false) {
   return ["1", "true", "yes", "on"].includes(String(value).trim().toLowerCase());
 }
 
+function toList(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) {
+    return [];
+  }
+  return raw
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: toInt(process.env.PORT, 8080),
@@ -64,5 +75,7 @@ export const env = {
   securityGlobalRateMax: toInt(process.env.SECURITY_GLOBAL_RATE_MAX, 300),
   securityAuthRateWindowMs: toInt(process.env.SECURITY_AUTH_RATE_WINDOW_MS, 60000),
   securityAuthRateMax: toInt(process.env.SECURITY_AUTH_RATE_MAX, 20),
-  metricsToken: String(process.env.METRICS_TOKEN ?? "").trim()
+  metricsToken: String(process.env.METRICS_TOKEN ?? "").trim(),
+  metricsAllowedIps: toList(process.env.METRICS_ALLOWED_IPS),
+  secretCryptoKey: String(process.env.SECRET_CRYPTO_KEY ?? "").trim()
 };

@@ -1,6 +1,7 @@
 import { ROLES } from "../constants/roles.js";
 import { query } from "../db/pool.js";
 import { httpError } from "../utils/httpError.js";
+import { logger } from "../utils/logger.js";
 import { recordRagEvaluationEvent } from "../utils/metrics.js";
 import { createAuditLog } from "./auditLogService.js";
 
@@ -118,7 +119,12 @@ export async function upsertRagGenerationEvaluation(payload = {}, currentUser) {
       rating,
       comment: normalizeText(payload.comment, 200)
     }
-  }).catch(() => {});
+  }).catch((error) => {
+    logger.warn("audit_log_write_failed", {
+      action: "rag_evaluation.upsert",
+      error: error?.message || "unknown_error"
+    });
+  });
 
   return result.rows[0];
 }

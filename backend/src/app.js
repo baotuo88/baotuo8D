@@ -65,7 +65,24 @@ app.use("/api", reportRoutes);
 app.use("/api", eightDReportRoutes);
 app.use("/api", ragRoutes);
 
+function normalizeClientIp(value) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return "";
+  }
+  return raw.startsWith("::ffff:") ? raw.slice(7) : raw;
+}
+
 app.get("/metrics", (req, res) => {
+  const allowedIps = Array.isArray(env.metricsAllowedIps) ? env.metricsAllowedIps : [];
+  if (allowedIps.length > 0) {
+    const ip = normalizeClientIp(req.ip);
+    if (!allowedIps.includes(ip)) {
+      res.status(403).json({ message: "Forbidden metrics source" });
+      return;
+    }
+  }
+
   if (env.metricsToken) {
     const authHeader = String(req.headers.authorization ?? "");
     const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";

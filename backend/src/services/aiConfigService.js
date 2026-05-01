@@ -2,6 +2,8 @@ import { env } from "../config/env.js";
 import { ROLES } from "../constants/roles.js";
 import { query } from "../db/pool.js";
 import { httpError } from "../utils/httpError.js";
+import { logger } from "../utils/logger.js";
+import { decryptSecret, encryptSecret, isEncryptedSecret } from "../utils/crypto.js";
 import { createAuditLog } from "./auditLogService.js";
 
 const AI_CONFIG_ID = 1;
@@ -90,6 +92,41 @@ async function ensureConfigRow() {
       env.openaiApiKey,
       env.openaiBaseUrl,
       env.embeddingModel
+    ]
+  );
+
+  const result = await query(
+    `
+    SELECT id, chat_api_key, embed_api_key
+    FROM ai_runtime_config
+    WHERE id = $1
+    LIMIT 1
+    `,
+    [AI_CONFIG_ID]
+  );
+
+  const row = result.rows[0];
+  if (!row) {
+    return;
+  }
+
+  const needsUpgrade = !isEncryptedSecret(row.chat_api_key) || !isEncryptedSecret(row.embed_api_key);
+  if (!needsUpgrade) {
+    return;
+  }
+
+  await query(
+    `
+    UPDATE ai_runtime_config
+    SET
+      chat_api_key = $2,
+      embed_api_key = $3
+    WHERE id = $1
+    `,
+    [
+      AI_CONFIG_ID,
+      encryptSecret(row.chat_api_key),
+      encryptSecret(row.embed_api_key)
     ]
   );
 }
@@ -218,10 +255,10 @@ export async function updateAiConfig(payload, currentUser) {
     `,
     [
       AI_CONFIG_ID,
-      input.chat_api_key,
+      encryptSecret(input.chat_api_key),
       input.chat_base_url,
       input.chat_model,
-      input.embed_api_key,
+      encryptSecret(input.embed_api_key),
       input.embed_base_url,
       input.embed_model,
       currentUser.id
@@ -243,7 +280,12 @@ export async function updateAiConfig(payload, currentUser) {
       embed_base_url: input.embed_base_url,
       embed_model: input.embed_model
     }
-  }).catch(() => {});
+  }).catch((error) => {
+    logger.warn("audit_log_write_failed", {
+      action: "ai_config.update",
+      error: error?.message || "unknown_error"
+    });
+  });
 
   return toAdminView(row);
 }
@@ -323,10 +365,10 @@ export async function upsertAiProviderConfig(payload, currentUser) {
       input.provider_name,
       input.priority,
       input.enabled,
-      input.chat_api_key,
+      encryptSecret(input.chat_api_key),
       input.chat_base_url,
       input.chat_model,
-      input.embed_api_key,
+      encryptSecret(input.embed_api_key),
       input.embed_base_url,
       input.embed_model,
       currentUser.id
@@ -349,7 +391,12 @@ export async function upsertAiProviderConfig(payload, currentUser) {
       embed_base_url: input.embed_base_url,
       embed_model: input.embed_model
     }
-  }).catch(() => {});
+  }).catch((error) => {
+    logger.warn("audit_log_write_failed", {
+      action: "ai_provider.upsert",
+      error: error?.message || "unknown_error"
+    });
+  });
 
   return listAiProviderConfigs(currentUser);
 }
@@ -358,7 +405,7 @@ export async function getRuntimeChatConfig() {
   const row = await getConfigRow();
 
   return {
-    apiKey: assertRuntimeField(row.chat_api_key, "chat_api_key"),
+    apiKey: assertRuntimeField(decryptSecret(row.chat_api_key), "chat_api_key"),
     baseURL: assertRuntimeField(row.chat_base_url, "chat_base_url"),
     model: assertRuntimeField(row.chat_model, "chat_model")
   };
@@ -368,7 +415,7 @@ export async function getRuntimeEmbeddingConfig() {
   const row = await getConfigRow();
 
   return {
-    apiKey: assertRuntimeField(row.embed_api_key, "embed_api_key"),
+    apiKey: assertRuntimeField(decryptSecret(row.embed_api_key), "embed_api_key"),
     baseURL: assertRuntimeField(row.embed_base_url, "embed_base_url"),
     model: assertRuntimeField(row.embed_model, "embed_model")
   };
@@ -398,12 +445,12 @@ export async function getRuntimeAiProviderChain() {
       name: row.provider_name,
       priority: row.priority,
       chat: {
-        apiKey: String(row.chat_api_key ?? "").trim(),
+        apiKey: decryptSecret(String(row.chat_api_key ?? "").trim()),
         baseURL: String(row.chat_base_url ?? "").trim(),
         model: String(row.chat_model ?? "").trim()
       },
       embedding: {
-        apiKey: String(row.embed_api_key ?? "").trim(),
+        apiKey: decryptSecret(String(row.embed_api_key ?? "").trim()),
         baseURL: String(row.embed_base_url ?? "").trim(),
         model: String(row.embed_model ?? "").trim()
       }

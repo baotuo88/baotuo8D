@@ -217,6 +217,7 @@ docker compose down -v
 - 若设置 `METRICS_TOKEN`，需要在请求头中带上：
   - `Authorization: Bearer <METRICS_TOKEN>` 或
   - `X-Metrics-Token: <METRICS_TOKEN>`
+- 若设置 `METRICS_ALLOWED_IPS`（逗号分隔），仅允许白名单 IP 访问 `/metrics`
 - 当前包含：
   - `http_requests_total`
   - `http_errors_total`
@@ -252,6 +253,7 @@ SECURITY_GLOBAL_RATE_MAX=300
 SECURITY_AUTH_RATE_WINDOW_MS=60000
 SECURITY_AUTH_RATE_MAX=20
 JWT_SECRET=replace_with_a_long_random_secret_at_least_32_chars
+SECRET_CRYPTO_KEY=replace_with_a_random_secret_for_db_secret_encryption
 ```
 
 ## 上线前冒烟测试
