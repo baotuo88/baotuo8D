@@ -256,6 +256,10 @@ JWT_SECRET=replace_with_a_long_random_secret_at_least_32_chars
 SECRET_CRYPTO_KEY=replace_with_a_random_secret_for_db_secret_encryption
 ```
 
+注意：
+
+- 生产环境中 `SECRET_CRYPTO_KEY` 为必填项，未配置服务将拒绝启动。
+
 ## 上线前冒烟测试
 
 后端提供最小 smoke 测试脚本（健康检查 + 登录链路）：

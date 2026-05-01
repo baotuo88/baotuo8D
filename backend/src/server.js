@@ -6,6 +6,10 @@ if (!env.jwtSecret || env.jwtSecret.length < 32) {
   throw new Error("JWT_SECRET is required and must be at least 32 characters");
 }
 
+if (env.nodeEnv === "production" && !env.secretCryptoKey) {
+  throw new Error("SECRET_CRYPTO_KEY is required in production");
+}
+
 app.listen(env.port, () => {
   logger.info("server_started", {
     service: env.serviceName,

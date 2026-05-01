@@ -15,6 +15,7 @@ echo "[1/7] checking required env vars..."
 : "${JWT_SECRET:?JWT_SECRET is required}"
 : "${CORS_ORIGIN:?CORS_ORIGIN is required}"
 : "${METRICS_TOKEN:?METRICS_TOKEN is required}"
+: "${SECRET_CRYPTO_KEY:?SECRET_CRYPTO_KEY is required}"
 
 if [[ ${#JWT_SECRET} -lt 32 ]]; then
   echo "JWT_SECRET length must be >= 32"

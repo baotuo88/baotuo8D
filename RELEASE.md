@@ -31,7 +31,7 @@ curl -H "Authorization: Bearer ${METRICS_TOKEN}" -s http://127.0.0.1:8080/metric
 One-command preflight:
 
 ```bash
-JWT_SECRET=... CORS_ORIGIN=... METRICS_TOKEN=... ./scripts/go-live-preflight.sh
+JWT_SECRET=... CORS_ORIGIN=... METRICS_TOKEN=... SECRET_CRYPTO_KEY=... ./scripts/go-live-preflight.sh
 ```
 
 Expected:
