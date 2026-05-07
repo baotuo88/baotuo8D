@@ -38,9 +38,9 @@ async function withTimeout(promise, timeoutMs) {
   }
 }
 
-async function executeWithFailover({ channel, operation }) {
+async function executeWithFailover({ channel, operation, timeoutMsOverride }) {
   const providers = await getRuntimeAiProviderChain();
-  const timeoutMs = Math.max(env.aiRequestTimeoutMs, 1000);
+  const timeoutMs = Math.max(timeoutMsOverride ?? env.aiRequestTimeoutMs, 1000);
   const retryCount = Math.max(env.aiRetryCount, 0);
   const errors = [];
 
@@ -87,9 +87,10 @@ async function executeWithFailover({ channel, operation }) {
   throw finalError;
 }
 
-async function createChatCompletion({ systemPrompt, userPrompt, temperature = 0.2 }) {
+async function createChatCompletion({ systemPrompt, userPrompt, temperature = 0.2, timeoutMs }) {
   return executeWithFailover({
     channel: "chat",
+    timeoutMsOverride: timeoutMs,
     operation: async (provider) => {
       const client = createClient(provider.chat);
       const response = await client.chat.completions.create({
@@ -112,13 +113,38 @@ async function createChatCompletion({ systemPrompt, userPrompt, temperature = 0.
 }
 
 export async function generateJson({ systemPrompt, userPrompt, temperature = 0.2 }) {
-  const content = await createChatCompletion({
+  const baseContent = await createChatCompletion({
     systemPrompt,
     userPrompt,
-    temperature
+    temperature,
+    timeoutMs: Math.max(env.aiRequestTimeoutMs, 1000) * 2
   });
 
-  return parseJsonFromModel(content);
+  let content = baseContent;
+  let lastError = null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return parseJsonFromModel(content);
+    } catch (error) {
+      lastError = error;
+    }
+
+    content = await createChatCompletion({
+      systemPrompt: "You repair malformed JSON. Return valid JSON only, no markdown.",
+      userPrompt: [
+        "Fix the following text into valid JSON.",
+        "Do not add explanations. Keep keys and values as close as possible.",
+        `If parsing failed before, error was: ${lastError?.message || "unknown_error"}`,
+        "",
+        content
+      ].join("\n"),
+      temperature: 0,
+      timeoutMs: Math.max(env.aiRequestTimeoutMs, 1000) * 2
+    });
+  }
+
+  throw lastError || new Error("Failed to parse model JSON");
 }
 
 export async function generateText({ systemPrompt, userPrompt, temperature = 0.2 }) {

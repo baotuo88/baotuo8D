@@ -208,14 +208,18 @@ function toProviderAdminView(row) {
   };
 }
 
-function assertRuntimeField(value, fieldName) {
+function assertRuntimeField(value, fieldName, fallbackValue = "") {
   const text = String(value ?? "").trim();
-
-  if (!text) {
-    throw httpError(500, `AI config field ${fieldName} is missing`);
+  if (text) {
+    return text;
   }
 
-  return text;
+  const fallback = String(fallbackValue ?? "").trim();
+  if (fallback) {
+    return fallback;
+  }
+
+  throw httpError(500, `AI config field ${fieldName} is missing`);
 }
 
 export async function getAiConfigForAdmin(currentUser) {
@@ -405,9 +409,9 @@ export async function getRuntimeChatConfig() {
   const row = await getConfigRow();
 
   return {
-    apiKey: assertRuntimeField(decryptSecret(row.chat_api_key), "chat_api_key"),
-    baseURL: assertRuntimeField(row.chat_base_url, "chat_base_url"),
-    model: assertRuntimeField(row.chat_model, "chat_model")
+    apiKey: assertRuntimeField(decryptSecret(row.chat_api_key), "chat_api_key", env.openaiApiKey),
+    baseURL: assertRuntimeField(row.chat_base_url, "chat_base_url", env.openaiBaseUrl),
+    model: assertRuntimeField(row.chat_model, "chat_model", env.openaiModel)
   };
 }
 
@@ -415,9 +419,13 @@ export async function getRuntimeEmbeddingConfig() {
   const row = await getConfigRow();
 
   return {
-    apiKey: assertRuntimeField(decryptSecret(row.embed_api_key), "embed_api_key"),
-    baseURL: assertRuntimeField(row.embed_base_url, "embed_base_url"),
-    model: assertRuntimeField(row.embed_model, "embed_model")
+    apiKey: assertRuntimeField(
+      decryptSecret(row.embed_api_key),
+      "embed_api_key",
+      env.openaiApiKey
+    ),
+    baseURL: assertRuntimeField(row.embed_base_url, "embed_base_url", env.openaiBaseUrl),
+    model: assertRuntimeField(row.embed_model, "embed_model", env.embeddingModel)
   };
 }
 

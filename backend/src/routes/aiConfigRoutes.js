@@ -12,9 +12,8 @@ import {
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRoles([ROLES.ADMIN]));
 
-router.get("/ai-config", async (req, res, next) => {
+router.get("/ai-config", requireRoles([ROLES.ADMIN]), async (req, res, next) => {
   try {
     const config = await getAiConfigForAdmin(req.user);
     res.json({ data: config });
@@ -23,7 +22,7 @@ router.get("/ai-config", async (req, res, next) => {
   }
 });
 
-router.put("/ai-config", async (req, res, next) => {
+router.put("/ai-config", requireRoles([ROLES.ADMIN]), async (req, res, next) => {
   try {
     const config = await updateAiConfig(req.body ?? {}, req.user);
     res.json({ data: config });
@@ -32,7 +31,7 @@ router.put("/ai-config", async (req, res, next) => {
   }
 });
 
-router.get("/ai-config/providers", async (req, res, next) => {
+router.get("/ai-config/providers", requireRoles([ROLES.ADMIN]), async (req, res, next) => {
   try {
     const data = await listAiProviderConfigs(req.user);
     res.json({ data });
@@ -41,7 +40,7 @@ router.get("/ai-config/providers", async (req, res, next) => {
   }
 });
 
-router.put("/ai-config/providers", async (req, res, next) => {
+router.put("/ai-config/providers", requireRoles([ROLES.ADMIN]), async (req, res, next) => {
   try {
     const data = await upsertAiProviderConfig(req.body ?? {}, req.user);
     res.json({ data });

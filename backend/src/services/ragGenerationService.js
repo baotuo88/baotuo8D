@@ -223,6 +223,29 @@ function normalizeGeneratedReport(report, referenceCases) {
   };
 }
 
+function buildFallbackRawReport({ input, referenceCases, d2Text, d4Text, d5Text }) {
+  return {
+    title: input.title,
+    summary: [input.problemStatement, input.impact].filter(Boolean).join("；"),
+    d1_team: input.teamMembers.join("、"),
+    d2_problem: d2Text || input.problemStatement,
+    d3_containment: "已启动遏制措施：隔离相关批次并执行加严复检。",
+    d4_root_cause: d4Text || input.rootCauseHint || "根因待进一步验证。",
+    d5_corrective_actions: d5Text || "制定纠正措施并明确责任人与时点。",
+    d6_implementation: "按计划推进措施落地，并记录执行证据与结果。",
+    d7_preventive_actions: "同步修订点检/作业标准，防止同类问题复发。",
+    d8_recognition: "对跨部门协同与闭环执行进行复盘与认可。",
+    five_why_analysis: [],
+    historical_case_application: referenceCases.slice(0, 3).map((item) => ({
+      case_id: ensureText(item.id || item.title),
+      reference_point: ensureText(item.root_cause || item.problem || item.solution),
+      applied_to: "用于问题判断、根因分析及措施设计"
+    })),
+    next_actions: [],
+    risk_level: "medium"
+  };
+}
+
 function mergeSectionWithHint(value, hint) {
   const section = ensureText(value);
   const sectionHint = ensureText(hint);
@@ -344,14 +367,25 @@ export async function generateEightDFromRag(payload, currentUser) {
       d4Draft: d4Text,
       d5Draft: d5Text
     });
-    const rawReport = await generateJson({
-      systemPrompt: "You are an enterprise 8D report generator. Return strict JSON only.",
-      userPrompt,
-      temperature:
-        typeof input.generationOptions?.temperature === "number"
-          ? input.generationOptions.temperature
-          : 0.2
-    });
+    let rawReport;
+    try {
+      rawReport = await generateJson({
+        systemPrompt: "You are an enterprise 8D report generator. Return strict JSON only.",
+        userPrompt,
+        temperature:
+          typeof input.generationOptions?.temperature === "number"
+            ? input.generationOptions.temperature
+            : 0.2
+      });
+    } catch (_error) {
+      rawReport = buildFallbackRawReport({
+        input,
+        referenceCases,
+        d2Text,
+        d4Text,
+        d5Text
+      });
+    }
     rawReport.d2_problem = mergeSectionWithHint(rawReport?.d2_problem, d2Text);
     rawReport.d4_root_cause = mergeSectionWithHint(rawReport?.d4_root_cause, d4Text);
     rawReport.d5_corrective_actions = mergeSectionWithHint(rawReport?.d5_corrective_actions, d5Text);

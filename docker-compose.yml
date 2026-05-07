@@ -11,8 +11,6 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-eightd_ai}"]
       interval: 10s
@@ -36,10 +34,8 @@ services:
       ALLOW_RESET: "FALSE"
     volumes:
       - chroma_data:/chroma/chroma
-    ports:
-      - "${CHROMA_PORT:-8000}:8000"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8000/api/v2/heartbeat >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v2/heartbeat', timeout=3)\" || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -55,8 +51,6 @@ services:
     image: redis:7-alpine
     container_name: eightd-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -82,7 +76,7 @@ services:
       PORT: 8080
       LOG_LEVEL: ${BACKEND_LOG_LEVEL:-info}
       LOG_PRETTY: ${BACKEND_LOG_PRETTY:-false}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,http://127.0.0.1:3000}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-eightd_ai}
       CHROMA_URL: http://chroma:8000
       CHROMA_COLLECTION: ${CHROMA_COLLECTION:-eight_d_reports}
@@ -93,6 +87,7 @@ services:
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       JWT_SECRET: ${JWT_SECRET}
+      SECRET_CRYPTO_KEY: ${SECRET_CRYPTO_KEY}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
       BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
       ADMIN_REGISTER_TOKEN: ${ADMIN_REGISTER_TOKEN:-}
@@ -130,7 +125,7 @@ services:
       PORT: 8080
       LOG_LEVEL: ${BACKEND_LOG_LEVEL:-info}
       LOG_PRETTY: ${BACKEND_LOG_PRETTY:-false}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,http://127.0.0.1:3000}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-eightd_ai}
       CHROMA_URL: http://chroma:8000
       CHROMA_COLLECTION: ${CHROMA_COLLECTION:-eight_d_reports}
@@ -141,6 +136,7 @@ services:
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       JWT_SECRET: ${JWT_SECRET}
+      SECRET_CRYPTO_KEY: ${SECRET_CRYPTO_KEY}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
       BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
       ADMIN_REGISTER_TOKEN: ${ADMIN_REGISTER_TOKEN:-}
@@ -166,8 +162,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    ports:
-      - "${BACKEND_PORT:-8080}:8080"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/health >/dev/null || exit 1"]
       interval: 15s
@@ -193,7 +187,7 @@ services:
       PORT: 8080
       LOG_LEVEL: ${BACKEND_LOG_LEVEL:-info}
       LOG_PRETTY: ${BACKEND_LOG_PRETTY:-false}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,http://127.0.0.1:3000}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-eightd_ai}
       CHROMA_URL: http://chroma:8000
       CHROMA_COLLECTION: ${CHROMA_COLLECTION:-eight_d_reports}
@@ -209,6 +203,7 @@ services:
       QUEUE_RAG_INGESTION_CONCURRENCY: ${QUEUE_RAG_INGESTION_CONCURRENCY:-2}
       QUEUE_RAG_INGESTION_ATTEMPTS: ${QUEUE_RAG_INGESTION_ATTEMPTS:-3}
       JWT_SECRET: ${JWT_SECRET}
+      SECRET_CRYPTO_KEY: ${SECRET_CRYPTO_KEY}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
       BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
       ADMIN_REGISTER_TOKEN: ${ADMIN_REGISTER_TOKEN:-}
@@ -234,6 +229,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -q '[r]agIngestionWorker.js' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     logging:
       driver: json-file
       options:
@@ -244,15 +245,17 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        VITE_API_BASE: ${VITE_API_BASE:-/api}
     container_name: eightd-frontend
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      - "${FRONTEND_PORT:-3000}:4173"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4173/ >/dev/null || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10

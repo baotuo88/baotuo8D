@@ -110,12 +110,16 @@ BACKEND_LOG_PRETTY=false
 docker compose up -d --build
 ```
 
-### 3. 访问服务
+### 3. 访问服务（默认生产拓扑）
 
-- 前端：http://localhost:3000
-- 后端健康检查：http://localhost:8080/api/health
-- 前端健康检查：http://localhost:3000/health
-- Chroma：http://localhost:8000
+- 前端入口：http://localhost:3000
+- 后端 API：默认不对外暴露端口（仅容器内可达）
+- Chroma：默认不对外暴露端口（仅容器内可达）
+
+说明：
+- 前端构建默认使用 `VITE_API_BASE=/api`。
+- 这要求在服务器入口层（Nginx/Caddy/Ingress）将 `/api` 反向代理到后端服务。
+- 如果没有反代而直接访问 `localhost:3000`，登录/注册会出现 `404`（这是预期行为）。
 
 ### 4. 查看容器状态与日志
 
@@ -167,6 +171,40 @@ docker compose down -v
   - SPA 回退
   - `/api/` 反向代理到后端
   - `/health` 健康检查
+
+### 单端口对外（推荐）
+
+推荐生产只对外开放一个入口端口（通常 `80/443`）：
+
+- `/` -> 前端容器（例如 `127.0.0.1:3000`）
+- `/api/` -> 后端服务（例如 `127.0.0.1:18080` 或 Docker 内网 `backend:8080`）
+
+Nginx 示例（关键点：`/api` 保留前缀，`proxy_pass` 不要以 `/` 结尾）：
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:18080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
 
 ### 生产迁移机制
 
@@ -368,6 +406,35 @@ npm run dev
 ```env
 VITE_API_BASE=http://localhost:8080/api
 ```
+
+## 本机 Docker 联调模式（不经过反代）
+
+如果你在本机仅运行 Docker（没有 Nginx/Caddy 反代），建议使用直连后端模式：
+
+1. 暴露 backend 到本机回环地址（避免公网暴露）：
+
+```yaml
+services:
+  backend:
+    ports:
+      - "127.0.0.1:18080:8080"
+```
+
+2. 设置前端 API 基址：
+
+```env
+VITE_API_BASE=http://localhost:18080/api
+```
+
+3. 重建前端：
+
+```bash
+docker compose up -d --build frontend backend
+```
+
+说明：
+- 本机联调模式更便于直接访问与排错。
+- 正式部署到服务器后，建议切回 `VITE_API_BASE=/api` + 单端口反代模式。
 
 ## 用户系统与权限模型
 
