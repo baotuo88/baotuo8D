@@ -17,30 +17,30 @@ export default function AuditLogsPage({ loading, data, onSearch, onExportCsv }) 
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-stone-900">审计日志</h2>
-          <p className="text-sm text-stone-500">关键管理与业务动作追踪</p>
+          <h2 className="text-xl font-semibold text-slate-900">审计日志</h2>
+          <p className="text-sm text-slate-500">关键管理与业务动作追踪</p>
         </div>
         <button
           type="button"
           onClick={onExportCsv}
-          className="rounded-xl bg-stone-900 px-3 py-2 text-sm text-white hover:bg-stone-800"
+          className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800"
         >
           导出 CSV
         </button>
       </div>
 
-      <div className="rounded-2xl border border-stone-200 bg-white p-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <input
             value={action}
             onChange={(event) => setAction(event.target.value)}
             placeholder="action"
-            className="rounded-xl border border-stone-200 px-3 py-2 text-sm"
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
           />
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value)}
-            className="rounded-xl border border-stone-200 px-3 py-2 text-sm"
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
           >
             <option value="">全部状态</option>
             <option value="success">success</option>
@@ -49,21 +49,21 @@ export default function AuditLogsPage({ loading, data, onSearch, onExportCsv }) 
           <button
             type="button"
             onClick={() => onSearch({ action, status })}
-            className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-700"
+            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
           >
             查询
           </button>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-stone-200 bg-white p-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4">
         {loading ? (
-          <p className="text-sm text-stone-500">加载中...</p>
+          <p className="text-sm text-slate-500">加载中...</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-stone-200 text-stone-500">
+                <tr className="border-b border-slate-200 text-slate-500">
                   <th className="px-2 py-2">时间</th>
                   <th className="px-2 py-2">动作</th>
                   <th className="px-2 py-2">状态</th>
@@ -74,14 +74,14 @@ export default function AuditLogsPage({ loading, data, onSearch, onExportCsv }) 
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} className="border-b border-stone-100 align-top">
-                    <td className="px-2 py-2 text-stone-700">{String(item.created_at).replace("T", " ").slice(0, 19)}</td>
-                    <td className="px-2 py-2 text-stone-900">{item.action}</td>
-                    <td className="px-2 py-2 text-stone-900">{item.status}</td>
-                    <td className="px-2 py-2 text-stone-900">{item.resource_type}:{item.resource_id}</td>
-                    <td className="px-2 py-2 text-stone-900">{item.actor_id || "-"}</td>
+                  <tr key={item.id} className="border-b border-slate-100 align-top">
+                    <td className="px-2 py-2 text-slate-700">{String(item.created_at).replace("T", " ").slice(0, 19)}</td>
+                    <td className="px-2 py-2 text-slate-900">{item.action}</td>
+                    <td className="px-2 py-2 text-slate-900">{item.status}</td>
+                    <td className="px-2 py-2 text-slate-900">{item.resource_type}:{item.resource_id}</td>
+                    <td className="px-2 py-2 text-slate-900">{item.actor_id || "-"}</td>
                     <td className="px-2 py-2">
-                      <pre className="max-w-[420px] whitespace-pre-wrap break-all text-xs text-stone-600">
+                      <pre className="max-w-[420px] whitespace-pre-wrap break-all text-xs text-slate-600">
                         {toJsonText(item.detail)}
                       </pre>
                     </td>
@@ -89,7 +89,7 @@ export default function AuditLogsPage({ loading, data, onSearch, onExportCsv }) 
                 ))}
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-2 py-4 text-center text-stone-500">
+                    <td colSpan={6} className="px-2 py-4 text-center text-slate-500">
                       暂无数据
                     </td>
                   </tr>

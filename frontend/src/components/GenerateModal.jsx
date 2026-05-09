@@ -65,18 +65,18 @@ export default function GenerateModal({ open, onClose, onGenerate }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/30 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 p-4 backdrop-blur-sm">
       <div className="grid h-[min(92vh,900px)] w-full max-w-7xl gap-0 overflow-hidden rounded-[32px] border border-white/60 bg-white shadow-[0_32px_120px_rgba(28,25,23,0.24)] xl:grid-cols-[420px_minmax(0,1fr)]">
-        <section className="overflow-y-auto border-b border-stone-200 bg-[#fbfaf8] p-6 xl:border-b-0 xl:border-r">
+        <section className="overflow-y-auto border-b border-slate-200 bg-[#fbfaf8] p-6 xl:border-b-0 xl:border-r">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.24em] text-stone-400">AI Generate</p>
-              <h2 className="mt-2 font-serif text-3xl tracking-tight text-stone-900">高质量 8D 生成</h2>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">AI Generate</p>
+              <h2 className="mt-2 font-serif text-3xl tracking-tight text-slate-900">高质量 8D 生成</h2>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-500 transition hover:text-stone-900"
+              className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-500 transition hover:text-slate-900"
             >
               关闭
             </button>
@@ -90,11 +90,11 @@ export default function GenerateModal({ open, onClose, onGenerate }) {
               ["process", "工序", "例如：装配"]
             ].map(([key, label, placeholder]) => (
               <label key={key} className="block space-y-2">
-                <span className="text-sm font-medium text-stone-700">{label}</span>
+                <span className="text-sm font-medium text-slate-700">{label}</span>
                 <input
                   value={form[key]}
                   onChange={(event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))}
-                  className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-400"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-400"
                   placeholder={placeholder}
                   required={key === "title"}
                 />
@@ -107,12 +107,12 @@ export default function GenerateModal({ open, onClose, onGenerate }) {
               ["rootCauseHint", "根因线索", 3]
             ].map(([key, label, rows]) => (
               <label key={key} className="block space-y-2">
-                <span className="text-sm font-medium text-stone-700">{label}</span>
+                <span className="text-sm font-medium text-slate-700">{label}</span>
                 <textarea
                   value={form[key]}
                   onChange={(event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))}
                   rows={rows}
-                  className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-stone-400"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-slate-400"
                   placeholder={`填写${label}`}
                   required={key === "problemStatement"}
                 />
@@ -120,11 +120,11 @@ export default function GenerateModal({ open, onClose, onGenerate }) {
             ))}
 
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-stone-700">团队成员</span>
+              <span className="text-sm font-medium text-slate-700">团队成员</span>
               <input
                 value={form.teamMembers}
                 onChange={(event) => setForm((prev) => ({ ...prev, teamMembers: event.target.value }))}
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-400"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-400"
                 placeholder="QE,PE,ME"
               />
             </label>
@@ -138,7 +138,7 @@ export default function GenerateModal({ open, onClose, onGenerate }) {
             <button
               disabled={loading}
               type="submit"
-              className="w-full rounded-2xl bg-stone-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-stone-800 disabled:opacity-60"
+              className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
             >
               {loading ? "生成中..." : "开始生成"}
             </button>
@@ -146,26 +146,26 @@ export default function GenerateModal({ open, onClose, onGenerate }) {
         </section>
 
         <section className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] bg-white">
-          <div className="border-b border-stone-200 px-6 py-5">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-stone-400">Generated Result</p>
-            <h3 className="mt-2 font-serif text-2xl tracking-tight text-stone-900">生成结果</h3>
+          <div className="border-b border-slate-200 px-6 py-5">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Generated Result</p>
+            <h3 className="mt-2 font-serif text-2xl tracking-tight text-slate-900">生成结果</h3>
           </div>
 
           <div className="grid min-h-0 gap-0 xl:grid-cols-[1fr_420px]">
-            <div className="min-h-0 overflow-y-auto border-b border-stone-200 p-6 xl:border-b-0 xl:border-r">
+            <div className="min-h-0 overflow-y-auto border-b border-slate-200 p-6 xl:border-b-0 xl:border-r">
               {!result ? (
-                <div className="flex h-full min-h-[320px] items-center justify-center rounded-[28px] border border-dashed border-stone-200 bg-[#fcfbf8] text-sm text-stone-500">
+                <div className="flex h-full min-h-[320px] items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-[#fcfbf8] text-sm text-slate-500">
                   生成完成后，这里展示文本版 8D。
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <article className="rounded-[28px] border border-stone-200 bg-[#fcfbf8] p-5">
-                    <h4 className="font-serif text-2xl tracking-tight text-stone-900">
+                  <article className="rounded-[28px] border border-slate-200 bg-[#fcfbf8] p-5">
+                    <h4 className="font-serif text-2xl tracking-tight text-slate-900">
                       {result.report?.title || "未命名问题"}
                     </h4>
                     <div className="mt-4 space-y-2">
                       {parseReportText(result.report_text).map((line, index) => (
-                        <p key={`${line}-${index}`} className="text-sm leading-7 text-stone-700">
+                        <p key={`${line}-${index}`} className="text-sm leading-7 text-slate-700">
                           {line}
                         </p>
                       ))}
@@ -177,20 +177,20 @@ export default function GenerateModal({ open, onClose, onGenerate }) {
 
             <div className="min-h-0 overflow-y-auto bg-[#fbfaf8] p-6">
               {!result ? (
-                <div className="flex h-full min-h-[320px] items-center justify-center rounded-[28px] border border-dashed border-stone-200 bg-white text-sm text-stone-500">
+                <div className="flex h-full min-h-[320px] items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-white text-sm text-slate-500">
                   这里展示结构化 JSON。
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="rounded-[28px] border border-stone-200 bg-white p-5">
-                    <p className="text-xs uppercase tracking-[0.22em] text-stone-400">Style Summary</p>
-                    <pre className="mt-3 whitespace-pre-wrap text-sm leading-6 text-stone-700">
+                  <div className="rounded-[28px] border border-slate-200 bg-white p-5">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Style Summary</p>
+                    <pre className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">
                       {result.style_summary}
                     </pre>
                   </div>
-                  <div className="rounded-[28px] border border-stone-200 bg-white p-5">
-                    <p className="text-xs uppercase tracking-[0.22em] text-stone-400">Structured JSON</p>
-                    <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-stone-700">
+                  <div className="rounded-[28px] border border-slate-200 bg-white p-5">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Structured JSON</p>
+                    <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-slate-700">
                       {JSON.stringify(result.report, null, 2)}
                     </pre>
                   </div>

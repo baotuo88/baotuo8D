@@ -61,6 +61,7 @@ export default function EightDDetailPage({
   const [contentDraft, setContentDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
+  const [dirty, setDirty] = useState(false);
 
   const currentStepDef = useMemo(
     () => STEP_DEFS.find((item) => item.key === currentStep) || STEP_DEFS[0],
@@ -79,6 +80,31 @@ export default function EightDDetailPage({
 
     setContentDraft(report[currentStepDef.key] || "");
   }, [report, currentStepDef.key]);
+
+  useEffect(() => {
+    if (!report) {
+      setDirty(false);
+      return;
+    }
+
+    const titleChanged = String(titleDraft ?? "") !== String(report.title ?? "");
+    const contentChanged = String(contentDraft ?? "") !== String(report[currentStepDef.key] ?? "");
+    setDirty(titleChanged || contentChanged);
+  }, [report, titleDraft, contentDraft, currentStepDef.key]);
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        if (editable && !saving) {
+          handleSaveStep();
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editable, saving, titleDraft, contentDraft, report, currentStepDef.key]);
 
   const editable = canEdit(report, currentUser);
   const canReview = report && (currentUser?.role === "admin" || report.creator?.id === currentUser?.id);
@@ -113,6 +139,7 @@ export default function EightDDetailPage({
     try {
       await onSaveStep(report.id, currentStepDef.key, contentDraft);
       setActionMessage(`${currentStepDef.label} 已保存。`);
+      setDirty(false);
     } catch (error) {
       setActionMessage(error.message);
     } finally {
@@ -158,7 +185,7 @@ export default function EightDDetailPage({
 
   if (loading) {
     return (
-      <div className="rounded-[28px] border border-stone-200 bg-white p-8 text-sm text-stone-500 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
+      <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-sm text-slate-600 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
         正在加载 8D 详情...
       </div>
     );
@@ -166,27 +193,27 @@ export default function EightDDetailPage({
 
   if (!report) {
     return (
-      <div className="rounded-[28px] border border-stone-200 bg-white p-8 text-sm text-stone-500 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
+      <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-sm text-slate-600 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
         未找到该 8D 报告。
       </div>
     );
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
-      <aside className="rounded-[28px] border border-stone-200 bg-[#fbfaf8] p-4 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
+    <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+      <aside className="rounded-[28px] border border-slate-200 bg-[#f8fafc] p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
         <button
           type="button"
           onClick={onBack}
-          className="mb-4 inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs text-stone-600 transition hover:text-stone-900"
+          className="mb-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 transition hover:text-slate-900"
         >
           ← 返回列表
         </button>
 
-        <div className="mb-5 border-b border-stone-200 pb-4">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-stone-400">Step Navigator</p>
-          <h2 className="mt-2 font-serif text-xl tracking-tight text-stone-900">{report.title}</h2>
-          <p className="mt-2 text-sm text-stone-500">状态：{statusLabel(report.status)}</p>
+        <div className="mb-5 border-b border-slate-200 pb-4">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Step Navigator</p>
+          <h2 className="mt-2 font-serif text-xl tracking-tight text-slate-900">{report.title}</h2>
+          <p className="mt-2 text-sm text-slate-600">状态：{statusLabel(report.status)}</p>
         </div>
 
         <div className="space-y-1.5">
@@ -197,31 +224,31 @@ export default function EightDDetailPage({
               onClick={() => onNavigateStep(step.key)}
               className={`w-full rounded-2xl px-3 py-3 text-left transition ${
                 currentStepDef.key === step.key
-                  ? "bg-white text-stone-900 shadow-[0_1px_0_rgba(28,25,23,0.04)]"
-                  : "text-stone-500 hover:bg-white/80 hover:text-stone-900"
+                  ? "bg-[#1f2937] text-white shadow-[0_10px_20px_rgba(31,41,55,0.2)]"
+                  : "text-slate-600 hover:bg-white hover:text-slate-900"
               }`}
             >
               <p className="text-sm font-medium">{step.label}</p>
-              <p className="mt-1 text-xs leading-5 text-stone-400">{step.hint}</p>
+              <p className={`mt-1 text-xs leading-5 ${currentStepDef.key === step.key ? "text-slate-300" : "text-slate-500"}`}>{step.hint}</p>
             </button>
           ))}
         </div>
       </aside>
 
       <section className="space-y-4">
-        <div className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
+        <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex-1">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-stone-400">Metadata</p>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Metadata</p>
               <input
                 value={titleDraft}
                 onChange={(event) => setTitleDraft(event.target.value)}
                 disabled={!editable}
-                className="mt-3 w-full rounded-2xl border border-stone-200 bg-[#fcfbf8] px-4 py-3 font-serif text-3xl tracking-tight text-stone-900 outline-none transition focus:border-stone-400 disabled:cursor-not-allowed disabled:bg-stone-100"
+                className="mt-3 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-serif text-3xl tracking-tight text-slate-900 outline-none transition focus:border-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100"
               />
             </div>
 
-            <div className="grid min-w-[240px] gap-2 rounded-2xl bg-[#f7f6f3] p-4 text-sm text-stone-600">
+            <div className="grid min-w-[240px] gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
               <div className="flex items-center justify-between gap-3">
                 <span>创建人</span>
                 <span>{report.creator?.name || "-"}</span>
@@ -242,7 +269,7 @@ export default function EightDDetailPage({
               type="button"
               disabled={!editable || saving}
               onClick={handleSaveTitle}
-              className="rounded-2xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition hover:border-stone-300 hover:text-stone-900 disabled:opacity-50"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900 disabled:opacity-50"
             >
               保存标题
             </button>
@@ -251,7 +278,7 @@ export default function EightDDetailPage({
                 type="button"
                 disabled={saving}
                 onClick={handleSubmitReview}
-                className="rounded-2xl bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-800"
+                className="rounded-2xl bg-[#1f2937] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#111827]"
               >
                 提交评审
               </button>
@@ -279,13 +306,13 @@ export default function EightDDetailPage({
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-stone-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.03)]">
-          <div className="border-b border-stone-200 px-5 py-4">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-stone-400">Editing</p>
-            <h3 className="mt-2 font-serif text-2xl tracking-tight text-stone-900">
+        <div className="rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+          <div className="border-b border-slate-200 px-5 py-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Editing</p>
+            <h3 className="mt-2 font-serif text-2xl tracking-tight text-slate-900">
               {currentStepDef.label}
             </h3>
-            <p className="mt-2 text-sm leading-6 text-stone-500">{currentStepDef.hint}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{currentStepDef.hint}</p>
           </div>
 
           <div className="px-5 py-5">
@@ -294,7 +321,7 @@ export default function EightDDetailPage({
               onChange={(event) => setContentDraft(event.target.value)}
               disabled={!editable}
               rows={18}
-              className="w-full rounded-[24px] border border-stone-200 bg-[#fcfbf8] px-5 py-5 text-sm leading-7 text-stone-800 outline-none transition focus:border-stone-400 disabled:cursor-not-allowed disabled:bg-stone-100"
+              className="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-5 text-sm leading-7 text-slate-800 outline-none transition focus:border-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100"
               placeholder="在此编写该步骤内容..."
             />
 
@@ -303,29 +330,30 @@ export default function EightDDetailPage({
                 type="button"
                 disabled={!editable || saving}
                 onClick={handleSaveStep}
-                className="rounded-2xl bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-800 disabled:opacity-50"
+                className="rounded-2xl bg-[#1f2937] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#111827] disabled:opacity-50"
               >
-                保存当前步骤
+                {dirty ? "保存当前步骤 *" : "保存当前步骤"}
               </button>
-              {actionMessage && <span className="text-sm text-stone-500">{actionMessage}</span>}
+              {dirty && <span className="text-sm text-amber-700">有未保存修改</span>}
+              {actionMessage && <span className="text-sm text-slate-600">{actionMessage}</span>}
             </div>
           </div>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-stone-400">Status History</p>
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Status History</p>
             <div className="mt-4 space-y-3">
               {(report.statusHistory || []).length === 0 ? (
-                <p className="text-sm text-stone-500">暂无状态流转记录。</p>
+                <p className="text-sm text-slate-600">暂无状态流转记录。</p>
               ) : (
                 report.statusHistory.map((item) => (
-                  <article key={item.id} className="rounded-2xl bg-[#f7f6f3] p-4 text-sm text-stone-600">
-                    <p className="font-medium text-stone-900">
+                  <article key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                    <p className="font-medium text-slate-900">
                       {item.fromStatus} → {item.toStatus}
                     </p>
                     <p className="mt-2 leading-6">{item.comment || "无备注"}</p>
-                    <p className="mt-2 text-xs text-stone-400">
+                    <p className="mt-2 text-xs text-slate-500">
                       {item.actor?.name} · {formatDate(item.createdAt)}
                     </p>
                   </article>
@@ -334,17 +362,17 @@ export default function EightDDetailPage({
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-stone-400">Approvals</p>
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Approvals</p>
             <div className="mt-4 space-y-3">
               {(report.approvals || []).length === 0 ? (
-                <p className="text-sm text-stone-500">暂无审批记录。</p>
+                <p className="text-sm text-slate-600">暂无审批记录。</p>
               ) : (
                 report.approvals.map((item) => (
-                  <article key={item.id} className="rounded-2xl bg-[#f7f6f3] p-4 text-sm text-stone-600">
-                    <p className="font-medium text-stone-900">{item.decision}</p>
+                  <article key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                    <p className="font-medium text-slate-900">{item.decision}</p>
                     <p className="mt-2 leading-6">{item.comment || "无备注"}</p>
-                    <p className="mt-2 text-xs text-stone-400">
+                    <p className="mt-2 text-xs text-slate-500">
                       {item.actor?.name} · {formatDate(item.createdAt)}
                     </p>
                   </article>

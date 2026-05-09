@@ -1,9 +1,9 @@
 function StatCard({ title, value, hint = "" }) {
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-stone-400">{title}</p>
-      <p className="mt-2 text-2xl font-semibold text-stone-900">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-stone-500">{hint}</p> : null}
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{title}</p>
+      <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+      {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
     </div>
   );
 }
@@ -25,21 +25,21 @@ export default function RagMetricsPage({ loading, data, onRefresh, onExportCsv }
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-stone-900">RAG 指标看板</h2>
-          <p className="text-sm text-stone-500">生成效率、评分与趋势总览</p>
+          <h2 className="text-xl font-semibold text-slate-900">RAG 指标看板</h2>
+          <p className="text-sm text-slate-500">生成效率、评分与趋势总览</p>
         </div>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={onRefresh}
-            className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 hover:bg-stone-50"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           >
             刷新
           </button>
           <button
             type="button"
             onClick={onExportCsv}
-            className="rounded-xl bg-stone-900 px-3 py-2 text-sm text-white hover:bg-stone-800"
+            className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800"
           >
             导出趋势 CSV
           </button>
@@ -47,7 +47,7 @@ export default function RagMetricsPage({ loading, data, onRefresh, onExportCsv }
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-stone-200 bg-white p-6 text-sm text-stone-500">加载中...</div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">加载中...</div>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -66,12 +66,12 @@ export default function RagMetricsPage({ loading, data, onRefresh, onExportCsv }
             />
           </div>
 
-          <div className="rounded-2xl border border-stone-200 bg-white p-4">
-            <h3 className="text-sm font-medium text-stone-800">近 14 天趋势</h3>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <h3 className="text-sm font-medium text-slate-800">近 14 天趋势</h3>
             <div className="mt-3 overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-stone-200 text-stone-500">
+                  <tr className="border-b border-slate-200 text-slate-500">
                     <th className="px-2 py-2">日期</th>
                     <th className="px-2 py-2">生成总数</th>
                     <th className="px-2 py-2">成功数</th>
@@ -80,16 +80,16 @@ export default function RagMetricsPage({ loading, data, onRefresh, onExportCsv }
                 </thead>
                 <tbody>
                   {trends.map((row) => (
-                    <tr key={String(row.day)} className="border-b border-stone-100">
-                      <td className="px-2 py-2 text-stone-700">{String(row.day).slice(0, 10)}</td>
-                      <td className="px-2 py-2 text-stone-900">{toNumber(row.total)}</td>
-                      <td className="px-2 py-2 text-stone-900">{toNumber(row.success)}</td>
-                      <td className="px-2 py-2 text-stone-900">{toNumber(row.avg_duration_ms)}</td>
+                    <tr key={String(row.day)} className="border-b border-slate-100">
+                      <td className="px-2 py-2 text-slate-700">{String(row.day).slice(0, 10)}</td>
+                      <td className="px-2 py-2 text-slate-900">{toNumber(row.total)}</td>
+                      <td className="px-2 py-2 text-slate-900">{toNumber(row.success)}</td>
+                      <td className="px-2 py-2 text-slate-900">{toNumber(row.avg_duration_ms)}</td>
                     </tr>
                   ))}
                   {trends.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-2 py-4 text-center text-stone-500">
+                      <td colSpan={4} className="px-2 py-4 text-center text-slate-500">
                         暂无数据
                       </td>
                     </tr>

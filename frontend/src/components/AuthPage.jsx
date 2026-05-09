@@ -16,9 +16,9 @@ const initialRegister = {
 function Field({ label, children, hint }) {
   return (
     <label className="block space-y-2">
-      <span className="text-sm font-medium text-stone-700">{label}</span>
+      <span className="text-sm font-medium text-slate-700">{label}</span>
       {children}
-      {hint ? <span className="block text-xs text-stone-400">{hint}</span> : null}
+      {hint ? <span className="block text-xs text-slate-400">{hint}</span> : null}
     </label>
   );
 }
@@ -27,7 +27,7 @@ function Input(props) {
   return (
     <input
       {...props}
-      className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-stone-400"
+      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
     />
   );
 }
@@ -60,13 +60,13 @@ export default function AuthPage({ onLogin, onRegister }) {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(214,211,209,0.45),_transparent_28%),linear-gradient(180deg,#fbfaf8_0%,#f2efe8_100%)] px-4 py-8">
       <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-6xl gap-6 rounded-[32px] border border-white/70 bg-white/70 p-4 shadow-[0_24px_90px_rgba(41,37,36,0.08)] backdrop-blur md:grid-cols-[1.1fr_0.9fr] md:p-6">
-        <section className="flex flex-col justify-between rounded-[28px] bg-stone-900 px-6 py-7 text-stone-100 md:px-10 md:py-10">
+        <section className="flex flex-col justify-between rounded-[28px] bg-slate-900 px-6 py-7 text-slate-100 md:px-10 md:py-10">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-stone-400">Notion-like 8D</p>
+            <p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Notion-like 8D</p>
             <h1 className="mt-5 max-w-xl font-serif text-4xl leading-tight tracking-tight">
               面向企业问题闭环的 8D AI 工作台
             </h1>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-stone-300">
+            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300">
               登录后可查看 8D 列表、逐步编辑 D1-D8、调用 AI 生成高质量 8D，并维护企业内部模型配置。
             </p>
           </div>
@@ -79,7 +79,7 @@ export default function AuthPage({ onLogin, onRegister }) {
             ].map((item) => (
               <article key={item.title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <h2 className="font-medium text-white">{item.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-stone-300">{item.text}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-300">{item.text}</p>
               </article>
             ))}
           </div>
@@ -87,12 +87,12 @@ export default function AuthPage({ onLogin, onRegister }) {
 
         <section className="flex items-center justify-center rounded-[28px] bg-[#fcfbf8] px-4 py-6 md:px-8">
           <div className="w-full max-w-md">
-            <div className="mb-6 flex rounded-full bg-stone-100 p-1">
+            <div className="mb-6 flex rounded-full bg-slate-100 p-1">
               <button
                 type="button"
                 onClick={() => setMode("login")}
                 className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition ${
-                  mode === "login" ? "bg-white text-stone-900 shadow-sm" : "text-stone-500"
+                  mode === "login" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
                 }`}
               >
                 登录
@@ -101,19 +101,19 @@ export default function AuthPage({ onLogin, onRegister }) {
                 type="button"
                 onClick={() => setMode("register")}
                 className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition ${
-                  mode === "register" ? "bg-white text-stone-900 shadow-sm" : "text-stone-500"
+                  mode === "register" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
                 }`}
               >
                 注册
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 rounded-[28px] border border-stone-200 bg-white p-6 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
+            <form onSubmit={handleSubmit} className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
               <div>
-                <h2 className="font-serif text-2xl tracking-tight text-stone-900">
+                <h2 className="font-serif text-2xl tracking-tight text-slate-900">
                   {mode === "login" ? "进入工作台" : "创建账号"}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-stone-500">
+                <p className="mt-2 text-sm leading-6 text-slate-500">
                   {mode === "login"
                     ? "使用已有账号登录后查看和编辑 8D 报告。"
                     : "注册后会自动登录；管理员注册需要额外口令。"}
@@ -169,7 +169,7 @@ export default function AuthPage({ onLogin, onRegister }) {
                       onChange={(event) =>
                         setRegisterForm((prev) => ({ ...prev, role: event.target.value }))
                       }
-                      className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-400"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400"
                     >
                       <option value="user">普通用户</option>
                       <option value="admin">管理员</option>
@@ -202,7 +202,7 @@ export default function AuthPage({ onLogin, onRegister }) {
               <button
                 disabled={submitting}
                 type="submit"
-                className="w-full rounded-2xl bg-stone-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? "提交中..." : mode === "login" ? "登录" : "注册并进入"}
               </button>
