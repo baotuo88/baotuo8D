@@ -57,11 +57,14 @@ export default function EightDListPage({
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("updated_desc");
   const [page, setPage] = useState(1);
+  const [creatorFilter, setCreatorFilter] = useState("");
+  const [createdFrom, setCreatedFrom] = useState("");
+  const [createdTo, setCreatedTo] = useState("");
   const pageSize = 8;
 
   useEffect(() => {
     setPage(1);
-  }, [query, statusFilter, sortBy, reports.length]);
+  }, [query, statusFilter, sortBy, creatorFilter, createdFrom, createdTo, reports.length]);
 
   const stats = useMemo(() => {
     return {
@@ -84,7 +87,25 @@ export default function EightDListPage({
         .some((value) => String(value).toLowerCase().includes(keyword));
     });
 
-    const sorted = [...filtered].sort((a, b) => {
+    const creatorKeyword = creatorFilter.trim().toLowerCase();
+    const startTime = createdFrom ? new Date(`${createdFrom}T00:00:00`).getTime() : null;
+    const endTime = createdTo ? new Date(`${createdTo}T23:59:59.999`).getTime() : null;
+
+    const refined = filtered.filter((report) => {
+      const creatorName = String(report.creator?.name || "").toLowerCase();
+      const creatorEmail = String(report.creator?.email || "").toLowerCase();
+      const updatedAt = new Date(report.timestamps?.updatedAt || 0).getTime();
+      const createdAt = new Date(report.timestamps?.createdAt || 0).getTime();
+      const creatorMatch =
+        !creatorKeyword ||
+        creatorName.includes(creatorKeyword) ||
+        creatorEmail.includes(creatorKeyword);
+      const fromMatch = !startTime || createdAt >= startTime || updatedAt >= startTime;
+      const toMatch = !endTime || createdAt <= endTime || updatedAt <= endTime;
+      return creatorMatch && fromMatch && toMatch;
+    });
+
+    const sorted = [...refined].sort((a, b) => {
       const at = new Date(a.timestamps?.updatedAt || 0).getTime();
       const bt = new Date(b.timestamps?.updatedAt || 0).getTime();
       if (sortBy === "updated_asc") {
@@ -101,12 +122,12 @@ export default function EightDListPage({
 
     const start = (page - 1) * pageSize;
     return {
-      filtered,
+      filtered: refined,
       sorted,
       pageItems: sorted.slice(start, start + pageSize),
       pageCount: Math.max(1, Math.ceil(sorted.length / pageSize))
     };
-  }, [reports, query, sortBy, page]);
+  }, [reports, query, sortBy, creatorFilter, createdFrom, createdTo, page]);
 
   async function handleCreate(event) {
     event.preventDefault();
@@ -209,6 +230,15 @@ export default function EightDListPage({
                 </select>
               </label>
               <label className="block space-y-2">
+                <span className="text-xs uppercase tracking-[0.22em] text-slate-500">创建人</span>
+                <input
+                  value={creatorFilter}
+                  onChange={(event) => setCreatorFilter(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                  placeholder="姓名 / 邮箱"
+                />
+              </label>
+              <label className="block space-y-2">
                 <span className="text-xs uppercase tracking-[0.22em] text-slate-500">搜索</span>
                 <input
                   value={query}
@@ -233,6 +263,27 @@ export default function EightDListPage({
             </div>
           </div>
 
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <label className="block space-y-2">
+              <span className="text-xs uppercase tracking-[0.22em] text-slate-500">创建开始日期</span>
+              <input
+                type="date"
+                value={createdFrom}
+                onChange={(event) => setCreatedFrom(event.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className="text-xs uppercase tracking-[0.22em] text-slate-500">创建结束日期</span>
+              <input
+                type="date"
+                value={createdTo}
+                onChange={(event) => setCreatedTo(event.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+              />
+            </label>
+          </div>
+
           <div className="mt-5 grid gap-3 md:grid-cols-4">
             {[
               { label: "总数", value: stats.total },
@@ -245,6 +296,24 @@ export default function EightDListPage({
                 <p className="mt-2 font-serif text-3xl tracking-tight text-slate-900">{item.value}</p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500">
+            {(creatorFilter || createdFrom || createdTo || query || statusFilter) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setCreatorFilter("");
+                  setCreatedFrom("");
+                  setCreatedTo("");
+                  onChangeStatusFilter("");
+                }}
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600"
+              >
+                清空筛选
+              </button>
+            )}
           </div>
         </div>
 

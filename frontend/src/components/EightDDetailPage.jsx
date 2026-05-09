@@ -110,6 +110,27 @@ export default function EightDDetailPage({
   const canReview = report && (currentUser?.role === "admin" || report.creator?.id === currentUser?.id);
   const showApprove = report?.status === "review" && currentUser?.role === "admin";
 
+  useEffect(() => {
+    function handleBeforeUnload(event) {
+      if (dirty && !saving) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [dirty, saving]);
+
+  function guardedNavigate(action) {
+    if (dirty && !saving) {
+      const ok = window.confirm("当前有未保存修改，确认离开吗？");
+      if (!ok) {
+        return;
+      }
+    }
+    action();
+  }
+
   async function handleSaveTitle() {
     if (!report || !editable) {
       return;
@@ -204,7 +225,7 @@ export default function EightDDetailPage({
       <aside className="rounded-[28px] border border-slate-200 bg-[#f8fafc] p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
         <button
           type="button"
-          onClick={onBack}
+          onClick={() => guardedNavigate(onBack)}
           className="mb-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 transition hover:text-slate-900"
         >
           ← 返回列表
@@ -221,7 +242,7 @@ export default function EightDDetailPage({
             <button
               key={step.key}
               type="button"
-              onClick={() => onNavigateStep(step.key)}
+              onClick={() => guardedNavigate(() => onNavigateStep(step.key))}
               className={`w-full rounded-2xl px-3 py-3 text-left transition ${
                 currentStepDef.key === step.key
                   ? "bg-[#1f2937] text-white shadow-[0_10px_20px_rgba(31,41,55,0.2)]"
