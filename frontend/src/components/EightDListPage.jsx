@@ -260,13 +260,13 @@ export default function EightDListPage({
               <h2 className="mt-2 font-serif text-3xl tracking-tight text-slate-900">8D 报告中心</h2>
             </div>
 
-            <div className="grid gap-3 md:min-w-[520px] md:grid-cols-3">
+            <div className="grid gap-3 md:min-w-[520px] md:grid-cols-2">
               <label className="block space-y-2">
                 <span className="text-xs uppercase tracking-[0.22em] text-slate-500">状态筛选</span>
                 <select
                   value={statusFilter}
                   onChange={(event) => onChangeStatusFilter(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
                 >
                   {STATUS_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -280,7 +280,7 @@ export default function EightDListPage({
                 <input
                   value={creatorFilter}
                   onChange={(event) => setCreatorFilter(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
                   placeholder="姓名 / 邮箱"
                 />
               </label>
@@ -289,7 +289,7 @@ export default function EightDListPage({
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
                   placeholder="标题 / 创建人 / 邮箱"
                 />
               </label>
@@ -298,7 +298,7 @@ export default function EightDListPage({
                 <select
                   value={sortBy}
                   onChange={(event) => setSortBy(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
                 >
                   <option value="updated_desc">更新时间 新到旧</option>
                   <option value="updated_asc">更新时间 旧到新</option>
@@ -316,7 +316,7 @@ export default function EightDListPage({
                 type="date"
                 value={createdFrom}
                 onChange={(event) => setCreatedFrom(event.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
               />
             </label>
             <label className="block space-y-2">
@@ -325,7 +325,7 @@ export default function EightDListPage({
                 type="date"
                 value={createdTo}
                 onChange={(event) => setCreatedTo(event.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
               />
             </label>
           </div>
@@ -344,7 +344,7 @@ export default function EightDListPage({
             ))}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500">
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-2 text-xs text-slate-500">
             {(creatorFilter || createdFrom || createdTo || query || statusFilter) && (
               <button
                 type="button"
@@ -355,7 +355,7 @@ export default function EightDListPage({
                   setCreatedTo("");
                   onChangeStatusFilter("");
                 }}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600"
+                className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               >
                 清空筛选
               </button>
