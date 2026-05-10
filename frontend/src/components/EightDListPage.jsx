@@ -254,13 +254,13 @@ export default function EightDListPage({
 
       <section className="space-y-4">
         <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-4">
             <div>
               <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Overview</p>
               <h2 className="mt-2 font-serif text-3xl tracking-tight text-slate-900">8D 报告中心</h2>
             </div>
 
-            <div className="grid gap-3 md:min-w-[520px] md:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <label className="block space-y-2">
                 <span className="text-xs uppercase tracking-[0.22em] text-slate-500">状态筛选</span>
                 <select
@@ -309,7 +309,7 @@ export default function EightDListPage({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <label className="block space-y-2">
               <span className="text-xs uppercase tracking-[0.22em] text-slate-500">创建开始日期</span>
               <input
@@ -328,6 +328,8 @@ export default function EightDListPage({
                 className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
               />
             </label>
+            <div className="hidden xl:block" />
+            <div className="hidden xl:block" />
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-4">
