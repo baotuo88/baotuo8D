@@ -45,6 +45,10 @@ function canEdit(report, currentUser) {
   return report.creator?.id === currentUser.id && report.status === "draft";
 }
 
+function draftStorageKey(reportId, step, userId) {
+  return `eightd:draft:${reportId}:${step}:${userId || "anonymous"}`;
+}
+
 export default function EightDDetailPage({
   report,
   loading,
@@ -62,11 +66,16 @@ export default function EightDDetailPage({
   const [saving, setSaving] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [draftRecovered, setDraftRecovered] = useState(false);
+  const [autoSavedAt, setAutoSavedAt] = useState(null);
 
   const currentStepDef = useMemo(
     () => STEP_DEFS.find((item) => item.key === currentStep) || STEP_DEFS[0],
     [currentStep]
   );
+  const editable = canEdit(report, currentUser);
+  const canReview = report && (currentUser?.role === "admin" || report.creator?.id === currentUser?.id);
+  const showApprove = report?.status === "review" && currentUser?.role === "admin";
 
   useEffect(() => {
     setTitleDraft(report?.title || "");
@@ -80,6 +89,39 @@ export default function EightDDetailPage({
 
     setContentDraft(report[currentStepDef.key] || "");
   }, [report, currentStepDef.key]);
+
+  useEffect(() => {
+    if (!report || !currentStepDef?.key || !editable) {
+      setDraftRecovered(false);
+      return;
+    }
+
+    const key = draftStorageKey(report.id, currentStepDef.key, currentUser?.id);
+    const raw = window.localStorage.getItem(key);
+    if (!raw) {
+      setDraftRecovered(false);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      const localTitle = String(parsed?.title ?? "");
+      const localContent = String(parsed?.content ?? "");
+      const serverTitle = String(report.title ?? "");
+      const serverContent = String(report[currentStepDef.key] ?? "");
+
+      if (localTitle !== serverTitle) {
+        setTitleDraft(localTitle);
+      }
+      if (localContent !== serverContent) {
+        setContentDraft(localContent);
+      }
+
+      setDraftRecovered(localTitle !== serverTitle || localContent !== serverContent);
+    } catch (_error) {
+      setDraftRecovered(false);
+    }
+  }, [report?.id, report?.title, report?.[currentStepDef.key], currentStepDef?.key, currentUser?.id, editable]);
 
   useEffect(() => {
     if (!report) {
@@ -106,23 +148,71 @@ export default function EightDDetailPage({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [editable, saving, titleDraft, contentDraft, report, currentStepDef.key]);
 
-  const editable = canEdit(report, currentUser);
-  const canReview = report && (currentUser?.role === "admin" || report.creator?.id === currentUser?.id);
-  const showApprove = report?.status === "review" && currentUser?.role === "admin";
-
   useEffect(() => {
     function handleBeforeUnload(event) {
       if (dirty && !saving) {
+        persistLocalDraftNow();
         event.preventDefault();
         event.returnValue = "";
       }
     }
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [dirty, saving]);
+  }, [dirty, saving, report?.id, currentStepDef?.key, currentUser?.id, titleDraft, contentDraft, editable]);
+
+  useEffect(() => {
+    if (!report || !editable) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (!dirty) {
+        return;
+      }
+
+      const key = draftStorageKey(report.id, currentStepDef.key, currentUser?.id);
+      window.localStorage.setItem(
+        key,
+        JSON.stringify({
+          title: titleDraft,
+          content: contentDraft,
+          savedAt: new Date().toISOString()
+        })
+      );
+      setAutoSavedAt(new Date());
+    }, 800);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    report?.id,
+    currentStepDef?.key,
+    currentUser?.id,
+    titleDraft,
+    contentDraft,
+    dirty,
+    editable
+  ]);
+
+  function persistLocalDraftNow() {
+    if (!report || !editable) {
+      return;
+    }
+
+    const key = draftStorageKey(report.id, currentStepDef.key, currentUser?.id);
+    window.localStorage.setItem(
+      key,
+      JSON.stringify({
+        title: titleDraft,
+        content: contentDraft,
+        savedAt: new Date().toISOString()
+      })
+    );
+    setAutoSavedAt(new Date());
+  }
 
   function guardedNavigate(action) {
     if (dirty && !saving) {
+      persistLocalDraftNow();
       const ok = window.confirm("当前有未保存修改，确认离开吗？");
       if (!ok) {
         return;
@@ -141,6 +231,15 @@ export default function EightDDetailPage({
 
     try {
       await onSaveTitle(report.id, titleDraft);
+      const key = draftStorageKey(report.id, currentStepDef.key, currentUser?.id);
+      const raw = window.localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        window.localStorage.setItem(
+          key,
+          JSON.stringify({ ...parsed, title: titleDraft, savedAt: new Date().toISOString() })
+        );
+      }
       setActionMessage("标题已保存。");
     } catch (error) {
       setActionMessage(error.message);
@@ -159,8 +258,11 @@ export default function EightDDetailPage({
 
     try {
       await onSaveStep(report.id, currentStepDef.key, contentDraft);
+      const key = draftStorageKey(report.id, currentStepDef.key, currentUser?.id);
+      window.localStorage.removeItem(key);
       setActionMessage(`${currentStepDef.label} 已保存。`);
       setDirty(false);
+      setDraftRecovered(false);
     } catch (error) {
       setActionMessage(error.message);
     } finally {
@@ -356,6 +458,12 @@ export default function EightDDetailPage({
                 {dirty ? "保存当前步骤 *" : "保存当前步骤"}
               </button>
               {dirty && <span className="text-sm text-amber-700">有未保存修改</span>}
+              {!dirty && autoSavedAt && (
+                <span className="text-sm text-slate-500">
+                  草稿已自动保存于 {autoSavedAt.toLocaleTimeString()}
+                </span>
+              )}
+              {draftRecovered && <span className="text-sm text-emerald-700">已恢复本地草稿</span>}
               {actionMessage && <span className="text-sm text-slate-600">{actionMessage}</span>}
             </div>
           </div>

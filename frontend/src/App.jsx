@@ -33,7 +33,34 @@ function parseRoute() {
     };
   }
 
-  return { page: "report-list" };
+  if (path === "/reports") {
+    const page = Math.max(1, Number.parseInt(params.get("page") || "1", 10) || 1);
+    return {
+      page: "report-list",
+      listState: {
+        status: params.get("status") || "",
+        query: params.get("q") || "",
+        sortBy: params.get("sort") || "updated_desc",
+        creator: params.get("creator") || "",
+        createdFrom: params.get("from") || "",
+        createdTo: params.get("to") || "",
+        page
+      }
+    };
+  }
+
+  return {
+    page: "report-list",
+    listState: {
+      status: "",
+      query: "",
+      sortBy: "updated_desc",
+      creator: "",
+      createdFrom: "",
+      createdTo: "",
+      page: 1
+    }
+  };
 }
 
 function isAdmin(user) {
@@ -248,7 +275,9 @@ export default function App() {
     }
 
     if (route.page === "report-list") {
-      loadReports();
+      const nextStatus = route.listState?.status || "";
+      setStatusFilter(nextStatus);
+      loadReports(nextStatus);
       return;
     }
 
@@ -270,7 +299,7 @@ export default function App() {
     if (route.page === "audit-logs") {
       loadAuditLogs();
     }
-  }, [token, route.page, route.reportId]);
+  }, [token, route.page, route.reportId, route.listState?.status]);
 
   async function handleLogin(payload) {
     const result = await apiRequest("/auth/login", {
@@ -440,6 +469,7 @@ export default function App() {
             reports={reports}
             loading={reportsLoading}
             statusFilter={statusFilter}
+            initialListState={route.listState}
             onChangeStatusFilter={(value) => {
               setStatusFilter(value);
               loadReports(value);

@@ -47,6 +47,7 @@ export default function EightDListPage({
   reports,
   loading,
   statusFilter,
+  initialListState,
   onChangeStatusFilter,
   onCreateReport,
   onSelectReport
@@ -54,17 +55,62 @@ export default function EightDListPage({
   const [draft, setDraft] = useState(emptyDraft);
   const [creating, setCreating] = useState(false);
   const [message, setMessage] = useState("");
-  const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState("updated_desc");
-  const [page, setPage] = useState(1);
-  const [creatorFilter, setCreatorFilter] = useState("");
-  const [createdFrom, setCreatedFrom] = useState("");
-  const [createdTo, setCreatedTo] = useState("");
+  const [query, setQuery] = useState(initialListState?.query || "");
+  const [sortBy, setSortBy] = useState(initialListState?.sortBy || "updated_desc");
+  const [page, setPage] = useState(initialListState?.page || 1);
+  const [creatorFilter, setCreatorFilter] = useState(initialListState?.creator || "");
+  const [createdFrom, setCreatedFrom] = useState(initialListState?.createdFrom || "");
+  const [createdTo, setCreatedTo] = useState(initialListState?.createdTo || "");
   const pageSize = 8;
+
+  useEffect(() => {
+    setQuery(initialListState?.query || "");
+    setSortBy(initialListState?.sortBy || "updated_desc");
+    setPage(initialListState?.page || 1);
+    setCreatorFilter(initialListState?.creator || "");
+    setCreatedFrom(initialListState?.createdFrom || "");
+    setCreatedTo(initialListState?.createdTo || "");
+  }, [
+    initialListState?.query,
+    initialListState?.sortBy,
+    initialListState?.page,
+    initialListState?.creator,
+    initialListState?.createdFrom,
+    initialListState?.createdTo
+  ]);
 
   useEffect(() => {
     setPage(1);
   }, [query, statusFilter, sortBy, creatorFilter, createdFrom, createdTo, reports.length]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (statusFilter) {
+      params.set("status", statusFilter);
+    }
+    if (query.trim()) {
+      params.set("q", query.trim());
+    }
+    if (sortBy && sortBy !== "updated_desc") {
+      params.set("sort", sortBy);
+    }
+    if (creatorFilter.trim()) {
+      params.set("creator", creatorFilter.trim());
+    }
+    if (createdFrom) {
+      params.set("from", createdFrom);
+    }
+    if (createdTo) {
+      params.set("to", createdTo);
+    }
+    if (page > 1) {
+      params.set("page", String(page));
+    }
+    const nextHash = params.toString() ? `/reports?${params.toString()}` : "/reports";
+    if (window.location.hash.replace(/^#/, "") !== nextHash) {
+      window.history.replaceState(null, "", `#${nextHash}`);
+    }
+  }, [statusFilter, query, sortBy, creatorFilter, createdFrom, createdTo, page]);
 
   const stats = useMemo(() => {
     return {
