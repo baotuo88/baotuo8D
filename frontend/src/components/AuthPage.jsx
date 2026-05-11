@@ -27,7 +27,7 @@ function Input(props) {
   return (
     <input
       {...props}
-      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+      className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
     />
   );
 }
@@ -58,9 +58,9 @@ export default function AuthPage({ onLogin, onRegister }) {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(214,211,209,0.45),_transparent_28%),linear-gradient(180deg,#fbfaf8_0%,#f2efe8_100%)] px-4 py-8">
-      <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-6xl gap-6 rounded-[32px] border border-white/70 bg-white/70 p-4 shadow-[0_24px_90px_rgba(41,37,36,0.08)] backdrop-blur md:grid-cols-[1.1fr_0.9fr] md:p-6">
-        <section className="flex flex-col justify-between rounded-[28px] bg-slate-900 px-6 py-7 text-slate-100 md:px-10 md:py-10">
+    <div className="min-h-screen bg-slate-50 px-4 py-8">
+      <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-6xl gap-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1.1fr_0.9fr] md:p-6">
+        <section className="flex flex-col justify-between rounded-2xl bg-slate-900 px-6 py-7 text-slate-100 md:px-10 md:py-10">
           <div>
             <p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Notion-like 8D</p>
             <h1 className="mt-5 max-w-xl font-serif text-4xl leading-tight tracking-tight">
@@ -77,7 +77,7 @@ export default function AuthPage({ onLogin, onRegister }) {
               { title: "AI生成", text: "结合历史案例、风格总结和 5Why 输出结构化 8D。" },
               { title: "配置中心", text: "管理员可维护聊天模型与向量模型配置。" }
             ].map((item) => (
-              <article key={item.title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <article key={item.title} className="rounded-lg border border-white/10 bg-white/5 p-4">
                 <h2 className="font-medium text-white">{item.title}</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-300">{item.text}</p>
               </article>
@@ -85,7 +85,7 @@ export default function AuthPage({ onLogin, onRegister }) {
           </div>
         </section>
 
-        <section className="flex items-center justify-center rounded-[28px] bg-[#fcfbf8] px-4 py-6 md:px-8">
+        <section className="flex items-center justify-center rounded-2xl bg-slate-50 px-4 py-6 md:px-8">
           <div className="w-full max-w-md">
             <div className="mb-6 flex rounded-full bg-slate-100 p-1">
               <button
@@ -108,7 +108,7 @@ export default function AuthPage({ onLogin, onRegister }) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
+            <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div>
                 <h2 className="font-serif text-2xl tracking-tight text-slate-900">
                   {mode === "login" ? "进入工作台" : "创建账号"}
@@ -169,7 +169,7 @@ export default function AuthPage({ onLogin, onRegister }) {
                       onChange={(event) =>
                         setRegisterForm((prev) => ({ ...prev, role: event.target.value }))
                       }
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400"
                     >
                       <option value="user">普通用户</option>
                       <option value="admin">管理员</option>
@@ -194,7 +194,7 @@ export default function AuthPage({ onLogin, onRegister }) {
               )}
 
               {message && (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                   {message}
                 </div>
               )}
@@ -202,7 +202,7 @@ export default function AuthPage({ onLogin, onRegister }) {
               <button
                 disabled={submitting}
                 type="submit"
-                className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? "提交中..." : mode === "login" ? "登录" : "注册并进入"}
               </button>

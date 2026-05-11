@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { SkeletonCard } from "./Skeleton";
 
 const STEP_DEFS = [
   { key: "d1", label: "D1 团队组建", hint: "界定团队、职责和跨部门参与方。" },
@@ -19,6 +20,20 @@ function statusLabel(status) {
     return "已关闭";
   }
   return "草稿";
+}
+
+function StatusBadge({ status }) {
+  const label = statusLabel(status);
+  const styles = {
+    draft: "bg-slate-100 text-slate-700",
+    review: "bg-amber-100 text-amber-800",
+    closed: "bg-emerald-100 text-emerald-800"
+  };
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || styles.draft}`}>
+      {label}
+    </span>
+  );
 }
 
 function formatDate(value) {
@@ -308,15 +323,19 @@ export default function EightDDetailPage({
 
   if (loading) {
     return (
-      <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-sm text-slate-600 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
-        正在加载 8D 详情...
+      <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <SkeletonCard rows={4} />
+        <div className="space-y-4">
+          <SkeletonCard rows={3} />
+          <SkeletonCard rows={5} />
+        </div>
       </div>
     );
   }
 
   if (!report) {
     return (
-      <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-sm text-slate-600 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-sm text-slate-600 shadow-sm">
         未找到该 8D 报告。
       </div>
     );
@@ -324,7 +343,7 @@ export default function EightDDetailPage({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-      <aside className="rounded-[28px] border border-slate-200 bg-[#f8fafc] p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+      <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
         <button
           type="button"
           onClick={() => guardedNavigate(onBack)}
@@ -336,7 +355,7 @@ export default function EightDDetailPage({
         <div className="mb-5 border-b border-slate-200 pb-4">
           <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Step Navigator</p>
           <h2 className="mt-2 font-serif text-xl tracking-tight text-slate-900">{report.title}</h2>
-          <p className="mt-2 text-sm text-slate-600">状态：{statusLabel(report.status)}</p>
+          <p className="mt-2 text-sm text-slate-600">状态：<StatusBadge status={report.status} /></p>
         </div>
 
         <div className="space-y-1.5">
@@ -345,9 +364,9 @@ export default function EightDDetailPage({
               key={step.key}
               type="button"
               onClick={() => guardedNavigate(() => onNavigateStep(step.key))}
-              className={`w-full rounded-2xl px-3 py-3 text-left transition ${
+              className={`w-full rounded-lg px-3 py-3 text-left transition ${
                 currentStepDef.key === step.key
-                  ? "bg-[#1f2937] text-white shadow-[0_10px_20px_rgba(31,41,55,0.2)]"
+                  ? "bg-slate-900 text-white shadow-sm"
                   : "text-slate-600 hover:bg-white hover:text-slate-900"
               }`}
             >
@@ -359,7 +378,7 @@ export default function EightDDetailPage({
       </aside>
 
       <section className="space-y-4">
-        <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex-1">
               <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Metadata</p>
@@ -367,7 +386,7 @@ export default function EightDDetailPage({
                 value={titleDraft}
                 onChange={(event) => setTitleDraft(event.target.value)}
                 disabled={!editable}
-                className="mt-3 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-serif text-3xl tracking-tight text-slate-900 outline-none transition focus:border-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100"
+                className="mt-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 font-serif text-3xl tracking-tight text-slate-900 outline-none transition focus:border-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100"
               />
             </div>
 
@@ -392,7 +411,7 @@ export default function EightDDetailPage({
               type="button"
               disabled={!editable || saving}
               onClick={handleSaveTitle}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900 disabled:opacity-50"
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900 disabled:opacity-50"
             >
               保存标题
             </button>
@@ -401,7 +420,7 @@ export default function EightDDetailPage({
                 type="button"
                 disabled={saving}
                 onClick={handleSubmitReview}
-                className="rounded-2xl bg-[#1f2937] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#111827]"
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
               >
                 提交评审
               </button>
@@ -412,7 +431,7 @@ export default function EightDDetailPage({
                   type="button"
                   disabled={saving}
                   onClick={() => handleApprove("approved")}
-                  className="rounded-2xl bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-600"
+                  className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-600"
                 >
                   审批通过
                 </button>
@@ -420,7 +439,7 @@ export default function EightDDetailPage({
                   type="button"
                   disabled={saving}
                   onClick={() => handleApprove("rejected")}
-                  className="rounded-2xl bg-rose-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-600"
+                  className="rounded-lg bg-rose-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-600"
                 >
                   退回草稿
                 </button>
@@ -429,7 +448,7 @@ export default function EightDDetailPage({
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-5 py-4">
             <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Editing</p>
             <h3 className="mt-2 font-serif text-2xl tracking-tight text-slate-900">
@@ -444,7 +463,7 @@ export default function EightDDetailPage({
               onChange={(event) => setContentDraft(event.target.value)}
               disabled={!editable}
               rows={18}
-              className="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-5 text-sm leading-7 text-slate-800 outline-none transition focus:border-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-5 py-5 text-sm leading-7 text-slate-800 outline-none transition focus:border-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100"
               placeholder="在此编写该步骤内容..."
             />
 
@@ -453,7 +472,7 @@ export default function EightDDetailPage({
                 type="button"
                 disabled={!editable || saving}
                 onClick={handleSaveStep}
-                className="rounded-2xl bg-[#1f2937] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#111827] disabled:opacity-50"
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
               >
                 {dirty ? "保存当前步骤 *" : "保存当前步骤"}
               </button>
@@ -470,7 +489,7 @@ export default function EightDDetailPage({
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Status History</p>
             <div className="mt-4 space-y-3">
               {(report.statusHistory || []).length === 0 ? (
@@ -491,7 +510,7 @@ export default function EightDDetailPage({
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Approvals</p>
             <div className="mt-4 space-y-3">
               {(report.approvals || []).length === 0 ? (

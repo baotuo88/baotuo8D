@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SkeletonTable } from "./Skeleton";
 
 function toJsonText(value) {
   try {
@@ -23,24 +24,24 @@ export default function AuditLogsPage({ loading, data, onSearch, onExportCsv }) 
         <button
           type="button"
           onClick={onExportCsv}
-          className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800"
+          className="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800"
         >
           导出 CSV
         </button>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <input
             value={action}
             onChange={(event) => setAction(event.target.value)}
             placeholder="action"
-            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
           />
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value)}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
           >
             <option value="">全部状态</option>
             <option value="success">success</option>
@@ -49,16 +50,16 @@ export default function AuditLogsPage({ loading, data, onSearch, onExportCsv }) 
           <button
             type="button"
             onClick={() => onSearch({ action, status })}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
           >
             查询
           </button>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
         {loading ? (
-          <p className="text-sm text-slate-500">加载中...</p>
+          <SkeletonTable rows={5} cols={6} />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">

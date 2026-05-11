@@ -1,3 +1,5 @@
+import { SkeletonCard, SkeletonTable } from "./Skeleton";
+
 function StatCard({ title, value, hint = "" }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -32,14 +34,14 @@ export default function RagMetricsPage({ loading, data, onRefresh, onExportCsv }
           <button
             type="button"
             onClick={onRefresh}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           >
             刷新
           </button>
           <button
             type="button"
             onClick={onExportCsv}
-            className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800"
+            className="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800"
           >
             导出趋势 CSV
           </button>
@@ -47,7 +49,14 @@ export default function RagMetricsPage({ loading, data, onRefresh, onExportCsv }
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">加载中...</div>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCard key={i} rows={1} />
+            ))}
+          </div>
+          <SkeletonTable rows={5} cols={4} />
+        </div>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">

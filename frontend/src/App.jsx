@@ -3,8 +3,10 @@ import AiConfigPage from "./components/AiConfigPage";
 import AppShell from "./components/AppShell";
 import AuditLogsPage from "./components/AuditLogsPage";
 import AuthPage from "./components/AuthPage";
+import EightDCreatePage from "./components/EightDCreatePage";
 import EightDDetailPage from "./components/EightDDetailPage";
 import EightDListPage from "./components/EightDListPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 import GenerateModal from "./components/GenerateModal";
 import RagMetricsPage from "./components/RagMetricsPage";
 import { apiRequest, clearStoredSession, getStoredSession, setStoredSession } from "./lib/api";
@@ -22,6 +24,10 @@ function parseRoute() {
   }
   if (path === "/audit-logs") {
     return { page: "audit-logs" };
+  }
+
+  if (path === "/reports/new") {
+    return { page: "report-create" };
   }
 
   const match = path.match(/^\/reports\/([^/]+)$/);
@@ -444,7 +450,7 @@ export default function App() {
   );
 
   if (authLoading) {
-    return <div className="flex min-h-screen items-center justify-center bg-[#f7f6f3] text-sm text-stone-500">正在校验登录状态...</div>;
+    return <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-500">正在校验登录状态...</div>;
   }
 
   if (!session?.token || !currentUser) {
@@ -452,7 +458,7 @@ export default function App() {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <AppShell
         currentUser={currentUser}
         route={route}
@@ -474,9 +480,20 @@ export default function App() {
               setStatusFilter(value);
               loadReports(value);
             }}
-            onCreateReport={handleCreateReport}
+            onCreateNew={() => {
+              window.location.hash = "/reports/new";
+            }}
             onSelectReport={(reportId) => {
               window.location.hash = `/reports/${reportId}`;
+            }}
+          />
+        )}
+
+        {route.page === "report-create" && (
+          <EightDCreatePage
+            onCreateReport={handleCreateReport}
+            onCancel={() => {
+              window.location.hash = "/reports";
             }}
           />
         )}
@@ -553,6 +570,6 @@ export default function App() {
         onClose={() => setGeneratorOpen(false)}
         onGenerate={handleGenerateReport}
       />
-    </>
+    </ErrorBoundary>
   );
 }

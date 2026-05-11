@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { SkeletonCard, SkeletonTable } from "./Skeleton";
 
 const STATUS_OPTIONS = [
   { value: "", label: "全部状态" },
@@ -6,18 +7,6 @@ const STATUS_OPTIONS = [
   { value: "review", label: "评审中" },
   { value: "closed", label: "已关闭" }
 ];
-
-const emptyDraft = {
-  title: "",
-  d1: "",
-  d2: "",
-  d3: "",
-  d4: "",
-  d5: "",
-  d6: "",
-  d7: "",
-  d8: ""
-};
 
 function statusLabel(status) {
   if (status === "review") {
@@ -27,6 +16,20 @@ function statusLabel(status) {
     return "已关闭";
   }
   return "草稿";
+}
+
+function StatusBadge({ status }) {
+  const label = statusLabel(status);
+  const styles = {
+    draft: "bg-slate-100 text-slate-700",
+    review: "bg-amber-100 text-amber-800",
+    closed: "bg-emerald-100 text-emerald-800"
+  };
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || styles.draft}`}>
+      {label}
+    </span>
+  );
 }
 
 function countFilledSteps(report) {
@@ -49,12 +52,9 @@ export default function EightDListPage({
   statusFilter,
   initialListState,
   onChangeStatusFilter,
-  onCreateReport,
+  onCreateNew,
   onSelectReport
 }) {
-  const [draft, setDraft] = useState(emptyDraft);
-  const [creating, setCreating] = useState(false);
-  const [message, setMessage] = useState("");
   const [query, setQuery] = useState(initialListState?.query || "");
   const [sortBy, setSortBy] = useState(initialListState?.sortBy || "updated_desc");
   const [page, setPage] = useState(initialListState?.page || 1);
@@ -175,89 +175,34 @@ export default function EightDListPage({
     };
   }, [reports, query, sortBy, creatorFilter, createdFrom, createdTo, page]);
 
-  async function handleCreate(event) {
-    event.preventDefault();
-    setCreating(true);
-    setMessage("");
-
-    try {
-      await onCreateReport(draft);
-      setDraft(emptyDraft);
-      setMessage("已创建新 8D 草稿。");
-    } catch (error) {
-      setMessage(error.message);
-    } finally {
-      setCreating(false);
-    }
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <section className="space-y-4">
+          <SkeletonCard rows={2} />
+          <SkeletonTable rows={5} cols={4} />
+        </section>
+      </div>
+    );
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-      <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
-        <div className="mb-5">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Create</p>
-          <h2 className="mt-2 font-serif text-2xl tracking-tight text-slate-900">新建 8D 草稿</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            先录入标题与关键信息，后续在详情页按 D1-D8 完成完整闭环。
-          </p>
-        </div>
-
-        <form onSubmit={handleCreate} className="space-y-4">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-stone-700">标题</span>
-            <input
-              required
-              value={draft.title}
-              onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
-              placeholder="例如：控制器装配扭矩异常"
-            />
-          </label>
-
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
-            {[
-              { key: "d1", label: "D1 团队" },
-              { key: "d2", label: "D2 问题" },
-              { key: "d3", label: "D3 围堵" },
-              { key: "d4", label: "D4 根因" }
-            ].map((field) => (
-              <label key={field.key} className="block space-y-2">
-                <span className="text-sm font-medium text-stone-700">{field.label}</span>
-                <textarea
-                  rows={3}
-                  value={draft[field.key]}
-                  onChange={(event) =>
-                    setDraft((prev) => ({ ...prev, [field.key]: event.target.value }))
-                  }
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
-                  placeholder="可先留空，后续在详情页继续编辑"
-                />
-              </label>
-            ))}
-          </div>
-
-          {message && (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              {message}
-            </div>
-          )}
-
-          <button
-            disabled={creating}
-            type="submit"
-            className="w-full rounded-2xl bg-[#1f2937] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#111827] disabled:opacity-60"
-          >
-            {creating ? "创建中..." : "创建草稿"}
-          </button>
-        </form>
-      </section>
-
+    <div className="space-y-6">
       <section className="space-y-4">
-        <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Overview</p>
-              <h2 className="mt-2 font-serif text-3xl tracking-tight text-slate-900">8D 报告中心</h2>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Overview</p>
+                <h2 className="mt-2 font-serif text-3xl tracking-tight text-slate-900">8D 报告中心</h2>
+              </div>
+              <button
+                type="button"
+                onClick={onCreateNew}
+                className="h-11 rounded-lg bg-slate-900 px-5 text-sm font-medium text-white transition hover:bg-slate-800"
+              >
+                新建草稿
+              </button>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -266,7 +211,7 @@ export default function EightDListPage({
                 <select
                   value={statusFilter}
                   onChange={(event) => onChangeStatusFilter(event.target.value)}
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
+                  className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
                 >
                   {STATUS_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -280,7 +225,7 @@ export default function EightDListPage({
                 <input
                   value={creatorFilter}
                   onChange={(event) => setCreatorFilter(event.target.value)}
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
+                  className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
                   placeholder="姓名 / 邮箱"
                 />
               </label>
@@ -289,7 +234,7 @@ export default function EightDListPage({
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
+                  className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
                   placeholder="标题 / 创建人 / 邮箱"
                 />
               </label>
@@ -298,7 +243,7 @@ export default function EightDListPage({
                 <select
                   value={sortBy}
                   onChange={(event) => setSortBy(event.target.value)}
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
+                  className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
                 >
                   <option value="updated_desc">更新时间 新到旧</option>
                   <option value="updated_asc">更新时间 旧到新</option>
@@ -316,7 +261,7 @@ export default function EightDListPage({
                 type="date"
                 value={createdFrom}
                 onChange={(event) => setCreatedFrom(event.target.value)}
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
+                className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
               />
             </label>
             <label className="block space-y-2">
@@ -325,7 +270,7 @@ export default function EightDListPage({
                 type="date"
                 value={createdTo}
                 onChange={(event) => setCreatedTo(event.target.value)}
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
+                className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400"
               />
             </label>
             <div className="hidden xl:block" />
@@ -334,15 +279,24 @@ export default function EightDListPage({
 
           <div className="mt-5 grid gap-3 md:grid-cols-4">
             {[
-              { label: "总数", value: stats.total },
-              { label: "草稿", value: stats.draft },
-              { label: "评审中", value: stats.review },
-              { label: "已关闭", value: stats.closed }
+              { label: "总数", value: stats.total, status: "" },
+              { label: "草稿", value: stats.draft, status: "draft" },
+              { label: "评审中", value: stats.review, status: "review" },
+              { label: "已关闭", value: stats.closed, status: "closed" }
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-500">{item.label}</p>
-                <p className="mt-2 font-serif text-3xl tracking-tight text-slate-900">{item.value}</p>
-              </div>
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => onChangeStatusFilter(item.status)}
+                className={`rounded-2xl border px-4 py-4 text-left transition ${
+                  statusFilter === item.status
+                    ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                    : "border-slate-200 bg-slate-50 hover:border-slate-300"
+                }`}
+              >
+                <p className={`text-xs uppercase tracking-[0.22em] ${statusFilter === item.status ? "text-slate-300" : "text-slate-500"}`}>{item.label}</p>
+                <p className={`mt-2 font-serif text-3xl tracking-tight ${statusFilter === item.status ? "text-white" : "text-slate-900"}`}>{item.value}</p>
+              </button>
             ))}
           </div>
 
@@ -357,7 +311,7 @@ export default function EightDListPage({
                   setCreatedTo("");
                   onChangeStatusFilter("");
                 }}
-                className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+                className="h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               >
                 清空筛选
               </button>
@@ -365,7 +319,7 @@ export default function EightDListPage({
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr] gap-3 border-b border-slate-200 px-5 py-4 text-xs uppercase tracking-[0.24em] text-slate-500 md:grid">
             <span>标题</span>
             <span>状态</span>
@@ -373,10 +327,8 @@ export default function EightDListPage({
             <span>更新时间</span>
           </div>
 
-          {loading ? (
-            <div className="px-5 py-10 text-sm text-stone-500">正在加载 8D 列表...</div>
-          ) : visibleReports.filtered.length === 0 ? (
-            <div className="px-5 py-10 text-sm text-stone-500">当前没有符合条件的 8D 报告。</div>
+          {visibleReports.filtered.length === 0 ? (
+            <div className="px-5 py-10 text-sm text-slate-500">当前没有符合条件的 8D 报告。</div>
           ) : (
             visibleReports.pageItems.map((report) => (
               <button
@@ -389,7 +341,7 @@ export default function EightDListPage({
                   <p className="text-sm font-semibold text-slate-900">{report.title}</p>
                   <p className="mt-1 text-xs text-slate-500">{report.creator?.name || "未知创建人"}</p>
                 </div>
-                <div className="text-sm text-slate-700">{statusLabel(report.status)}</div>
+                <div className="text-sm"><StatusBadge status={report.status} /></div>
                 <div className="text-sm text-slate-700">{countFilledSteps(report)}/8</div>
                 <div className="text-sm text-slate-600">{formatDate(report.timestamps?.updatedAt)}</div>
               </button>
@@ -397,8 +349,8 @@ export default function EightDListPage({
           )}
         </div>
 
-        {!loading && visibleReports.filtered.length > 0 && (
-          <div className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-[0_16px_40px_rgba(15,23,42,0.04)]">
+        {visibleReports.filtered.length > 0 && (
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
             <span>
               第 {page} / {visibleReports.pageCount} 页，共 {visibleReports.filtered.length} 条
             </span>
@@ -407,7 +359,7 @@ export default function EightDListPage({
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 disabled:opacity-50"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 disabled:opacity-50"
               >
                 上一页
               </button>
@@ -415,7 +367,7 @@ export default function EightDListPage({
                 type="button"
                 disabled={page >= visibleReports.pageCount}
                 onClick={() => setPage((prev) => Math.min(visibleReports.pageCount, prev + 1))}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 disabled:opacity-50"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 disabled:opacity-50"
               >
                 下一页
               </button>

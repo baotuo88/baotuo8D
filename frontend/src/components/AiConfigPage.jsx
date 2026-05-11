@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SkeletonCard } from "./Skeleton";
 
 const initialForm = {
   chat_api_key: "",
@@ -67,7 +68,7 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Admin Console</p>
         <h2 className="mt-2 font-serif text-3xl tracking-tight text-slate-900">AI 配置页</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
@@ -80,7 +81,7 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
               type="password"
               value={form.chat_api_key}
               onChange={(event) => setForm((prev) => ({ ...prev, chat_api_key: event.target.value }))}
-              className="w-full rounded-2xl border border-slate-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
               placeholder="sk-..."
             />
           </Field>
@@ -89,7 +90,7 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
             <input
               value={form.chat_base_url}
               onChange={(event) => setForm((prev) => ({ ...prev, chat_base_url: event.target.value }))}
-              className="w-full rounded-2xl border border-slate-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
               placeholder="https://api.openai.com/v1"
             />
           </Field>
@@ -98,7 +99,7 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
             <input
               value={form.chat_model}
               onChange={(event) => setForm((prev) => ({ ...prev, chat_model: event.target.value }))}
-              className="w-full rounded-2xl border border-slate-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
               placeholder="gpt-4o-mini"
             />
           </Field>
@@ -110,7 +111,7 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
               onChange={(event) =>
                 setForm((prev) => ({ ...prev, embed_api_key: event.target.value }))
               }
-              className="w-full rounded-2xl border border-slate-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
               placeholder="sk-..."
             />
           </Field>
@@ -121,7 +122,7 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
               onChange={(event) =>
                 setForm((prev) => ({ ...prev, embed_base_url: event.target.value }))
               }
-              className="w-full rounded-2xl border border-slate-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
               placeholder="https://api.openai.com/v1"
             />
           </Field>
@@ -130,13 +131,13 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
             <input
               value={form.embed_model}
               onChange={(event) => setForm((prev) => ({ ...prev, embed_model: event.target.value }))}
-              className="w-full rounded-2xl border border-slate-200 bg-[#fcfbf8] px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
               placeholder="text-embedding-3-small"
             />
           </Field>
 
           {message && (
-            <div className="rounded-2xl border border-slate-200 bg-[#f7f6f3] px-4 py-3 text-sm text-slate-600">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
               {message}
             </div>
           )}
@@ -145,14 +146,14 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
             <button
               disabled={submitting}
               type="submit"
-              className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
+              className="rounded-lg bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
             >
               {submitting ? "保存中..." : "保存配置"}
             </button>
             <button
               type="button"
               onClick={() => onReload()}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+              className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
             >
               刷新配置
             </button>
@@ -160,12 +161,19 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
         </form>
       </section>
 
-      <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_0_rgba(28,25,23,0.03)]">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Current Snapshot</p>
         <h3 className="mt-2 font-serif text-2xl tracking-tight text-slate-900">当前配置概览</h3>
 
         {loading ? (
-          <p className="mt-6 text-sm text-slate-500">正在读取配置...</p>
+          <div className="mt-6 space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-2xl bg-slate-50 px-4 py-4">
+                <div className="h-3 w-16 animate-pulse rounded bg-slate-200" />
+                <div className="mt-3 h-4 w-32 animate-pulse rounded bg-slate-200" />
+              </div>
+            ))}
+          </div>
         ) : !config ? (
           <p className="mt-6 text-sm text-slate-500">暂无配置数据。</p>
         ) : (
@@ -178,7 +186,7 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
               ["向量 Base URL", config.embed_base_url],
               ["向量 Key", config.embed_api_key_masked || "未配置"]
             ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl bg-[#f7f6f3] px-4 py-4">
+              <div key={label} className="rounded-2xl bg-slate-50 px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{label}</p>
                 <p className="mt-2 break-all text-sm text-slate-700">{value || "-"}</p>
               </div>
