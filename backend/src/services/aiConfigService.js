@@ -58,12 +58,23 @@ function normalizeUrl(value, fieldName) {
   return url.replace(/\/+$/, "");
 }
 
+function normalizeOptionalText(value, fieldName, maxLength = 2048) {
+  const text = String(value ?? "").trim();
+  if (!text) {
+    return "";
+  }
+  if (text.length > maxLength) {
+    throw httpError(400, `${fieldName} must be <= ${maxLength} characters`);
+  }
+  return text;
+}
+
 function normalizeConfigInput(payload) {
   return {
-    chat_api_key: normalizeRequiredText(payload.chat_api_key, "chat_api_key"),
+    chat_api_key: normalizeOptionalText(payload.chat_api_key, "chat_api_key"),
     chat_base_url: normalizeUrl(payload.chat_base_url, "chat_base_url"),
     chat_model: normalizeRequiredText(payload.chat_model, "chat_model", 256),
-    embed_api_key: normalizeRequiredText(payload.embed_api_key, "embed_api_key"),
+    embed_api_key: normalizeOptionalText(payload.embed_api_key, "embed_api_key"),
     embed_base_url: normalizeUrl(payload.embed_base_url, "embed_base_url"),
     embed_model: normalizeRequiredText(payload.embed_model, "embed_model", 256)
   };
@@ -233,6 +244,9 @@ export async function updateAiConfig(payload, currentUser) {
 
   const input = normalizeConfigInput(payload ?? {});
 
+  const encryptedChatKey = input.chat_api_key ? encryptSecret(input.chat_api_key) : null;
+  const encryptedEmbedKey = input.embed_api_key ? encryptSecret(input.embed_api_key) : null;
+
   await query(
     `
     INSERT INTO ai_runtime_config (
@@ -249,20 +263,20 @@ export async function updateAiConfig(payload, currentUser) {
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
     ON CONFLICT (id)
     DO UPDATE SET
-      chat_api_key = EXCLUDED.chat_api_key,
+      chat_api_key = COALESCE($2, ai_runtime_config.chat_api_key),
       chat_base_url = EXCLUDED.chat_base_url,
       chat_model = EXCLUDED.chat_model,
-      embed_api_key = EXCLUDED.embed_api_key,
+      embed_api_key = COALESCE($5, ai_runtime_config.embed_api_key),
       embed_base_url = EXCLUDED.embed_base_url,
       embed_model = EXCLUDED.embed_model,
       updated_by = EXCLUDED.updated_by
     `,
     [
       AI_CONFIG_ID,
-      encryptSecret(input.chat_api_key),
+      encryptedChatKey,
       input.chat_base_url,
       input.chat_model,
-      encryptSecret(input.embed_api_key),
+      encryptedEmbedKey,
       input.embed_base_url,
       input.embed_model,
       currentUser.id
