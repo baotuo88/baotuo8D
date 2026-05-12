@@ -422,6 +422,16 @@ export default function App() {
     return result.data;
   }
 
+  async function handleTestAiConfig(payload) {
+    const result = await apiRequest("/ai-config/test", {
+      method: "POST",
+      token,
+      body: payload
+    });
+
+    return result.data;
+  }
+
   async function handleGenerateReport(payload) {
     const result = await apiRequest("/rag/generate", {
       method: "POST",
@@ -523,6 +533,7 @@ export default function App() {
             loading={aiConfigLoading}
             onReload={loadAiConfig}
             onSave={handleSaveAiConfig}
+            onTest={handleTestAiConfig}
           />
         )}
 

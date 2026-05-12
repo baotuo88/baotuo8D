@@ -35,10 +35,47 @@ function Field({ label, children, hint }) {
   );
 }
 
-export default function AiConfigPage({ config, loading, onReload, onSave }) {
+function TestResultPanel({ result }) {
+  if (!result) {
+    return null;
+  }
+
+  if (result.success) {
+    const models = result.models || [];
+    return (
+      <div className="flex-1 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm">
+        <p className="font-medium text-emerald-800">
+          连接成功 {result.provider ? `— ${result.provider}` : ""}
+        </p>
+        <p className="mt-1 text-emerald-700">
+          可用模型 ({models.length}):
+          {models.length > 0 ? (
+            <span className="ml-1 font-mono text-xs">
+              {models.map((m) => m.id).join(", ")}
+            </span>
+          ) : (
+            " 无"
+          )}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm">
+      <p className="font-medium text-red-800">连接失败</p>
+      <p className="mt-1 text-red-700">{result.error}</p>
+    </div>
+  );
+}
+
+export default function AiConfigPage({ config, loading, onReload, onSave, onTest }) {
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [testLoading, setTestLoading] = useState(false);
+  const [testType, setTestType] = useState(null);
+  const [testResult, setTestResult] = useState(null);
 
   useEffect(() => {
     setForm(toForm(config));
@@ -63,6 +100,27 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
       setMessage(error.message);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleTest(type) {
+    setTestLoading(true);
+    setTestType(type);
+    setTestResult(null);
+
+    try {
+      const fieldPrefix = type === "chat" ? "chat" : "embed";
+      const result = await onTest({
+        type,
+        base_url: form[`${fieldPrefix}_base_url`],
+        api_key: form[`${fieldPrefix}_api_key`]
+      });
+      setTestResult({ ...result, type });
+    } catch (error) {
+      setTestResult({ success: false, error: error.message, type });
+    } finally {
+      setTestLoading(false);
+      setTestType(null);
     }
   }
 
@@ -104,6 +162,20 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
             />
           </Field>
 
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={testLoading || !form.chat_base_url}
+              onClick={() => handleTest("chat")}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              {testLoading && testType === "chat" ? "测试中..." : "测试连接"}
+            </button>
+            {testResult?.type === "chat" && (
+              <TestResultPanel result={testResult} />
+            )}
+          </div>
+
           <Field label="Embedding API Key" hint="留空则保留现有值。">
             <input
               type="password"
@@ -135,6 +207,20 @@ export default function AiConfigPage({ config, loading, onReload, onSave }) {
               placeholder="text-embedding-3-small"
             />
           </Field>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={testLoading || !form.embed_base_url}
+              onClick={() => handleTest("embed")}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              {testLoading && testType === "embed" ? "测试中..." : "测试连接"}
+            </button>
+            {testResult?.type === "embed" && (
+              <TestResultPanel result={testResult} />
+            )}
+          </div>
 
           {message && (
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">

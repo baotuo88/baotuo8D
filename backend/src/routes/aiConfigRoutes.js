@@ -5,6 +5,7 @@ import { requireRoles } from "../middleware/rbacMiddleware.js";
 import {
   getAiConfigForAdmin,
   listAiProviderConfigs,
+  testAiConnection,
   updateAiConfig,
   upsertAiProviderConfig
 } from "../services/aiConfigService.js";
@@ -26,6 +27,15 @@ router.put("/ai-config", requireRoles([ROLES.ADMIN]), async (req, res, next) => 
   try {
     const config = await updateAiConfig(req.body ?? {}, req.user);
     res.json({ data: config });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/ai-config/test", requireRoles([ROLES.ADMIN]), async (req, res, next) => {
+  try {
+    const result = await testAiConnection(req.body ?? {}, req.user);
+    res.json({ data: result });
   } catch (error) {
     next(error);
   }

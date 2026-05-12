@@ -5,6 +5,7 @@ import { httpError } from "../utils/httpError.js";
 import { logger } from "../utils/logger.js";
 import { decryptSecret, encryptSecret, isEncryptedSecret } from "../utils/crypto.js";
 import { createAuditLog } from "./auditLogService.js";
+import OpenAI from "openai";
 
 const AI_CONFIG_ID = 1;
 
@@ -501,4 +502,43 @@ export async function getRuntimeAiProviderChain() {
       embedding
     }
   ];
+}
+
+export async function testAiConnection(payload, currentUser) {
+  assertAdmin(currentUser);
+
+  const type = String(payload.type ?? "chat").trim();
+  const baseUrl = normalizeUrl(payload.base_url, "base_url");
+
+  let apiKey = String(payload.api_key ?? "").trim();
+  if (!apiKey) {
+    const row = await getConfigRow();
+    const encryptedKey = type === "embed" ? row.embed_api_key : row.chat_api_key;
+    apiKey = decryptSecret(encryptedKey);
+  }
+
+  if (!apiKey) {
+    return { success: false, error: "API Key 未填写且数据库中无已保存的密钥", provider: baseUrl };
+  }
+
+  try {
+    const client = new OpenAI({ apiKey, baseURL: baseUrl });
+    const response = await client.models.list({ limit: 50 });
+    const models = (response.data || []).map((m) => ({
+      id: m.id,
+      owned_by: m.owned_by || ""
+    }));
+
+    return { success: true, models, provider: baseUrl };
+  } catch (error) {
+    const status = error?.status ?? error?.response?.status ?? null;
+    const message = error?.message || "unknown_error";
+    logger.warn("ai_config_test_failed", { type, baseUrl, status, message });
+
+    return {
+      success: false,
+      error: status ? `${message} (${status})` : message,
+      provider: baseUrl
+    };
+  }
 }
