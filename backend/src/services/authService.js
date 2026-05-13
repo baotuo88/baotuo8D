@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { ROLES, VALID_ROLES } from "../constants/roles.js";
 import { httpError } from "../utils/httpError.js";
+import { resolveJwtSecret } from "../utils/jwtHelper.js";
 import {
   normalizeEmail,
   validateEmail,
@@ -15,14 +17,6 @@ import {
   findUserById,
   listAllUsers
 } from "./userService.js";
-
-function resolveJwtSecret() {
-  if (!env.jwtSecret || env.jwtSecret.length < 32) {
-    throw httpError(500, "JWT_SECRET is missing or too short (min 32 chars)");
-  }
-
-  return env.jwtSecret;
-}
 
 function getSaltRounds() {
   return Math.max(8, Math.min(env.bcryptSaltRounds, 14));
@@ -79,7 +73,10 @@ export async function registerUser(payload) {
       throw httpError(403, "Admin registration is disabled");
     }
 
-    if (input.adminRegisterToken !== env.adminRegisterToken) {
+    const providedToken = Buffer.from(input.adminRegisterToken, "utf8");
+    const expectedToken = Buffer.from(env.adminRegisterToken, "utf8");
+
+    if (providedToken.length !== expectedToken.length || !crypto.timingSafeEqual(providedToken, expectedToken)) {
       throw httpError(403, "Invalid admin registration token");
     }
   }

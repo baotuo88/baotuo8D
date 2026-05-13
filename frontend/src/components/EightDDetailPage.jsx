@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { SkeletonCard } from "./Skeleton";
+import { StatusBadge, formatDate } from "./shared";
 
 const STEP_DEFS = [
   { key: "d1", label: "D1 团队组建", hint: "界定团队、职责和跨部门参与方。" },
@@ -11,38 +12,6 @@ const STEP_DEFS = [
   { key: "d7", label: "D7 防再发生", hint: "沉淀标准化和预防动作。" },
   { key: "d8", label: "D8 团队表彰", hint: "形成结案说明与经验复盘。" }
 ];
-
-function statusLabel(status) {
-  if (status === "review") {
-    return "评审中";
-  }
-  if (status === "closed") {
-    return "已关闭";
-  }
-  return "草稿";
-}
-
-function StatusBadge({ status }) {
-  const label = statusLabel(status);
-  const styles = {
-    draft: "bg-slate-100 text-slate-700",
-    review: "bg-amber-100 text-amber-800",
-    closed: "bg-emerald-100 text-emerald-800"
-  };
-  return (
-    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || styles.draft}`}>
-      {label}
-    </span>
-  );
-}
-
-function formatDate(value) {
-  if (!value) {
-    return "-";
-  }
-
-  return new Date(value).toLocaleString();
-}
 
 function canEdit(report, currentUser) {
   if (!report || !currentUser) {

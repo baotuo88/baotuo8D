@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { SkeletonCard, SkeletonTable } from "./Skeleton";
+import { StatusBadge, formatDate, statusLabel } from "./shared";
 
 const STATUS_OPTIONS = [
   { value: "", label: "全部状态" },
@@ -8,42 +9,10 @@ const STATUS_OPTIONS = [
   { value: "closed", label: "已关闭" }
 ];
 
-function statusLabel(status) {
-  if (status === "review") {
-    return "评审中";
-  }
-  if (status === "closed") {
-    return "已关闭";
-  }
-  return "草稿";
-}
-
-function StatusBadge({ status }) {
-  const label = statusLabel(status);
-  const styles = {
-    draft: "bg-slate-100 text-slate-700",
-    review: "bg-amber-100 text-amber-800",
-    closed: "bg-emerald-100 text-emerald-800"
-  };
-  return (
-    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || styles.draft}`}>
-      {label}
-    </span>
-  );
-}
-
 function countFilledSteps(report) {
   return ["d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8"].filter((key) =>
     String(report?.[key] ?? "").trim()
   ).length;
-}
-
-function formatDate(value) {
-  if (!value) {
-    return "-";
-  }
-
-  return new Date(value).toLocaleString();
 }
 
 export default function EightDListPage({
