@@ -9,6 +9,10 @@ import OpenAI from "openai";
 
 const AI_CONFIG_ID = 1;
 
+let providerChainCache = null;
+let providerChainCacheTime = 0;
+const PROVIDER_CHAIN_TTL_MS = 60_000;
+
 function assertAdmin(user) {
   if (!user?.id || user.role !== ROLES.ADMIN) {
     throw httpError(403, "Only admin can manage AI config");
@@ -242,6 +246,7 @@ export async function getAiConfigForAdmin(currentUser) {
 
 export async function updateAiConfig(payload, currentUser) {
   assertAdmin(currentUser);
+  providerChainCache = null;
 
   const input = normalizeConfigInput(payload ?? {});
 
@@ -350,6 +355,7 @@ function normalizeProviderInput(payload) {
 
 export async function upsertAiProviderConfig(payload, currentUser) {
   assertAdmin(currentUser);
+  providerChainCache = null;
   const input = normalizeProviderInput(payload ?? {});
 
   await query(
@@ -445,6 +451,11 @@ export async function getRuntimeEmbeddingConfig() {
 }
 
 export async function getRuntimeAiProviderChain() {
+  const now = Date.now();
+  if (providerChainCache && now - providerChainCacheTime < PROVIDER_CHAIN_TTL_MS) {
+    return providerChainCache;
+  }
+
   const result = await query(
     `
     SELECT
@@ -489,12 +500,14 @@ export async function getRuntimeAiProviderChain() {
     );
 
   if (providers.length > 0) {
+    providerChainCache = providers;
+    providerChainCacheTime = Date.now();
     return providers;
   }
 
   const chat = await getRuntimeChatConfig();
   const embedding = await getRuntimeEmbeddingConfig();
-  return [
+  const fallback = [
     {
       name: "legacy-default",
       priority: 1,
@@ -502,6 +515,9 @@ export async function getRuntimeAiProviderChain() {
       embedding
     }
   ];
+  providerChainCache = fallback;
+  providerChainCacheTime = Date.now();
+  return fallback;
 }
 
 export async function testAiConnection(payload, currentUser) {

@@ -3,6 +3,7 @@ import { requireAuth } from "../middleware/authMiddleware.js";
 import {
   approveEightDReport,
   createEightDReport,
+  deleteEightDReport,
   getEightDReportById,
   listEightDReportApprovals,
   listEightDReportStatusHistory,
@@ -105,6 +106,15 @@ router.get("/8d-reports/:reportId/status-history", async (req, res, next) => {
   try {
     const history = await listEightDReportStatusHistory(req.params.reportId, req.user);
     res.json({ data: history });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/8d-reports/:reportId", async (req, res, next) => {
+  try {
+    await deleteEightDReport(req.params.reportId, req.user);
+    res.status(204).end();
   } catch (error) {
     next(error);
   }

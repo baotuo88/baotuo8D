@@ -43,7 +43,8 @@ export default function EightDDetailPage({
   onSaveTitle,
   onSaveStep,
   onSubmitReview,
-  onApproval
+  onApproval,
+  onDelete
 }) {
   const [titleDraft, setTitleDraft] = useState("");
   const [contentDraft, setContentDraft] = useState("");
@@ -413,6 +414,20 @@ export default function EightDDetailPage({
                   退回草稿
                 </button>
               </>
+            )}
+            {onDelete && (editable || currentUser?.role === "admin") && (
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  if (window.confirm("确认删除该 8D 报告？此操作不可撤销。")) {
+                    onDelete(report.id);
+                  }
+                }}
+                className="rounded-lg border border-rose-200 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+              >
+                删除报告
+              </button>
             )}
           </div>
         </div>

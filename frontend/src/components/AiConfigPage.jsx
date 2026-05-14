@@ -38,7 +38,7 @@ function TestResultPanel({ result }) {
         <p className="font-medium text-emerald-800">
           连接成功 {result.provider ? `— ${result.provider}` : ""}
         </p>
-        <p className="mt-1 text-emerald-700">
+        <p className="mt-1 max-h-24 overflow-y-auto text-emerald-700">
           可用模型 ({models.length}):
           {models.length > 0 ? (
             <span className="ml-1 font-mono text-xs">

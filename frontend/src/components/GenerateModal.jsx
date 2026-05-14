@@ -18,9 +18,10 @@ function parseReportText(value) {
     .filter(Boolean);
 }
 
-export default function GenerateModal({ open, onClose, onGenerate }) {
+export default function GenerateModal({ open, onClose, onGenerate, onSaveAsNew }) {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
 
@@ -31,6 +32,7 @@ export default function GenerateModal({ open, onClose, onGenerate }) {
 
     setForm(initialForm);
     setLoading(false);
+    setSaving(false);
     setError("");
     setResult(null);
 
@@ -66,6 +68,23 @@ export default function GenerateModal({ open, onClose, onGenerate }) {
       setError(submitError.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSaveAsNew() {
+    if (!result?.report) {
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
+    try {
+      await onSaveAsNew(result.report);
+    } catch (saveError) {
+      setError(saveError.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -176,6 +195,14 @@ export default function GenerateModal({ open, onClose, onGenerate }) {
                       ))}
                     </div>
                   </article>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={handleSaveAsNew}
+                    className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
+                  >
+                    {saving ? "保存中..." : "另存为新 8D 报告"}
+                  </button>
                 </div>
               )}
             </div>

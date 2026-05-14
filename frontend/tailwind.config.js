@@ -4,9 +4,15 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        sans: [
+          "Inter",
+          "system-ui",
+          "-apple-system",
+          "sans-serif"
+        ],
         serif: [
-          "Source Han Serif SC",
           "Noto Serif SC",
+          "Source Han Serif SC",
           "Iowan Old Style",
           "Palatino Linotype",
           "Book Antiqua",

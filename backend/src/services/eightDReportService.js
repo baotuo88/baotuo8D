@@ -597,3 +597,22 @@ export async function listEightDReportStatusHistory(reportId, currentUser) {
     createdAt: row.created_at
   }));
 }
+
+export async function deleteEightDReport(reportId, currentUser) {
+  assertAuthedUser(currentUser);
+
+  const row = await getReportRowById(reportId);
+  if (!row) {
+    throw httpError(404, "Report not found");
+  }
+
+  if (!isAdmin(currentUser) && row.creator_id !== currentUser.id) {
+    throw httpError(403, "Only creator or admin can delete this report");
+  }
+
+  if (row.status === EIGHT_D_STATUSES.CLOSED && !isAdmin(currentUser)) {
+    throw httpError(409, "Only admin can delete a closed report");
+  }
+
+  await query("DELETE FROM eight_d_reports WHERE id = $1", [reportId]);
+}

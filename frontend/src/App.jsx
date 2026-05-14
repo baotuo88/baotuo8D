@@ -442,6 +442,27 @@ export default function App() {
     return result.data;
   }
 
+  async function handleSaveGeneratedReport(report) {
+    await apiRequest("/8d-reports", {
+      method: "POST",
+      token,
+      body: report
+    });
+    await loadReports();
+    setGeneratorOpen(false);
+    window.location.hash = "/reports";
+  }
+
+  async function handleDeleteReport(reportId) {
+    await apiRequest(`/8d-reports/${reportId}`, {
+      method: "DELETE",
+      token
+    });
+    setSelectedReport(null);
+    await loadReports();
+    window.location.hash = "/reports";
+  }
+
   const navigation = useMemo(
     () => [
       { key: "report-list", label: "8D 列表", href: "/reports" },
@@ -524,6 +545,7 @@ export default function App() {
             onSaveStep={handleSaveStep}
             onSubmitReview={handleStatusChange}
             onApproval={handleApproval}
+            onDelete={handleDeleteReport}
           />
         )}
 
@@ -580,6 +602,7 @@ export default function App() {
         open={generatorOpen}
         onClose={() => setGeneratorOpen(false)}
         onGenerate={handleGenerateReport}
+        onSaveAsNew={handleSaveGeneratedReport}
       />
     </ErrorBoundary>
   );
